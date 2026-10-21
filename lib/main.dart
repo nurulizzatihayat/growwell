@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const NourishApp());
+  runApp(const GrowWell());
 }
 
 const Color blush = Color(0xFFF7DCE4);
@@ -10,8 +10,8 @@ const Color cream = Color(0xFFFFFAF5);
 const Color ink = Color(0xFF302A2D);
 const Color sage = Color(0xFFE7EFD9);
 
-class NourishApp extends StatelessWidget {
-  const NourishApp({super.key});
+class GrowWell extends StatelessWidget {
+  const GrowWell({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Sign in and find something lovely to make.',
+                    'Sign in and check your children\'s growth progress.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.black54, fontSize: 14),
                   ),
@@ -195,12 +195,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Demo only: your details are not sent or saved.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black45, fontSize: 12),
-                  ),
                 ],
               ),
             ),
@@ -246,7 +240,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Demo account form complete! You can now log in.'),
+        content: Text('Account form complete! You can now log in.'),
       ),
     );
     Navigator.of(context).pop();
@@ -263,7 +257,7 @@ class _RegisterPageState extends State<RegisterPage> {
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
             children: [
               const Text(
-                'Join Little Nourish ♡',
+                'Join GrowWell',
                 style: TextStyle(
                     color: ink, fontSize: 28, fontWeight: FontWeight.w800),
               ),
@@ -379,12 +373,6 @@ class _RegisterPageState extends State<RegisterPage> {
                   'Already have an account? Log in',
                   style: TextStyle(color: rose, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Demo only: this form does not create or store a real account.',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black45, fontSize: 12),
               ),
             ],
           ),
@@ -732,7 +720,7 @@ class _RecipesPageState extends State<RecipesPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: const [
                             Text(
-                              'LITTLE NOURISH  ✿',
+                              'GROWWELL  ✿',
                               style: TextStyle(
                                 color: rose,
                                 fontSize: 11,
