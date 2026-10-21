@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 import 'database.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const GrowWell());
 }
 
@@ -43,7 +49,24 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const LoginPage();
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasData) {
+          return const MainNavigation();
+        }
+
+        return const LoginPage();
+      },
+    );
   }
 }
 
@@ -67,12 +90,54 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _login() {
-    if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainNavigation()),
+  Future<void> _login() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    if (!mounted) return;
+
+    // AuthGate will automatically show MainNavigation.
+  } on FirebaseAuthException catch (e) {
+    if (!mounted) return;
+
+    String message;
+
+    switch (e.code) {
+      case 'user-not-found':
+      case 'invalid-credential':
+        message = 'Incorrect email or password.';
+        break;
+      case 'wrong-password':
+        message = 'Incorrect email or password.';
+        break;
+      case 'invalid-email':
+        message = 'Please enter a valid email address.';
+        break;
+      case 'too-many-requests':
+        message = 'Too many attempts. Please try again later.';
+        break;
+      default:
+        message = e.message ?? 'Login failed. Please try again.';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Something went wrong. Please try again.'),
+      ),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -232,21 +297,88 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _register() {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please agree to continue.')),
-      );
-      return;
-    }
+  Future<void> _register() async {
+  if (!_formKey.currentState!.validate()) return;
+
+  if (!_agreeToTerms) {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Account form complete! You can now log in.'),
+        content: Text('Please agree to continue.'),
       ),
     );
-    Navigator.of(context).pop();
+    return;
   }
+
+  try {
+    // Create a real Firebase account.
+    final credential =
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+
+    final user = credential.user;
+
+    if (user == null) {
+      throw Exception('Account creation failed.');
+    }
+
+    // Save the profile in SQLite.
+    await DatabaseHelper.saveProfile(
+      uid: user.uid,
+      name: _nameController.text.trim(),
+      email: user.email ?? _emailController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Account created successfully! 💗'),
+      ),
+    );
+
+    // Firebase signs the user in automatically after registration.
+    // Signing out lets them return to the login page and sign in normally.
+    await FirebaseAuth.instance.signOut();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pop();
+  } on FirebaseAuthException catch (e) {
+    if (!mounted) return;
+
+    String message;
+
+    switch (e.code) {
+      case 'email-already-in-use':
+        message = 'This email already has an account.';
+        break;
+      case 'invalid-email':
+        message = 'Please enter a valid email address.';
+        break;
+      case 'weak-password':
+        message = 'Please choose a stronger password.';
+        break;
+      default:
+        message = e.message ?? 'Registration failed. Please try again.';
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Your account may have been created, but saving your profile failed. Please check your connection and try again.',
+        ),
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
