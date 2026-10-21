@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'database.dart';
 
 void main() {
   runApp(const GrowWell());
@@ -16,7 +18,7 @@ class GrowWell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Little Nourish',
+      title: 'GrowWell',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,

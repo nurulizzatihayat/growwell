@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "273895683139",
+    "firebase_url": "https://grow-well-fc68f-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "grow-well-fc68f",
+    "storage_bucket": "grow-well-fc68f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:273895683139:android:ee048c7e2c2895f8d750f6",
+        "android_client_info": {
+          "package_name": "com.example.growwell"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA4DUvBgd7pGWhDqGoUkyDNrOAQ6MRisX4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
