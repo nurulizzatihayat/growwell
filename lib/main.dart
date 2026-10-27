@@ -569,11 +569,7 @@ class _MainNavigationState extends State<MainNavigation> {
       icon: Icons.spa_rounded,
     ),
     RecipesPage(),
-    PlaceholderPage(
-      title: 'More',
-      subtitle: 'Settings and extra features will go here.',
-      icon: Icons.grid_view_rounded,
-    ),
+    MorePage(),
   ];
 
   @override
@@ -616,6 +612,64 @@ class _MainNavigationState extends State<MainNavigation> {
             icon: Icon(Icons.grid_view_outlined),
             selectedIcon: Icon(Icons.grid_view_rounded),
             label: 'More',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class MorePage extends StatefulWidget {
+  const MorePage({super.key});
+
+  @override
+  State<MorePage> createState() => _MorePageState();
+}
+
+class _MorePageState extends State<MorePage> {
+  bool _loggingOut = false;
+
+  Future<void> _logout() async {
+    setState(() => _loggingOut = true);
+    try {
+      await FirebaseAuth.instance.signOut();
+      // AuthGate returns the user to the login screen.
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not log out. Please try again.')),
+      );
+    } finally {
+      if (mounted) setState(() => _loggingOut = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: ListView(
+        padding: const EdgeInsets.all(24),
+        children: [
+          const Text(
+            'More',
+            style: TextStyle(
+              color: ink,
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text('Account', style: TextStyle(fontSize: 18, color: ink)),
+          const SizedBox(height: 8),
+          Text(
+            FirebaseAuth.instance.currentUser?.email ?? '',
+            style: const TextStyle(color: Colors.black54),
+          ),
+          const SizedBox(height: 24),
+          FilledButton.icon(
+            onPressed: _loggingOut ? null : _logout,
+            icon: const Icon(Icons.logout_rounded),
+            label: Text(_loggingOut ? 'Logging out...' : 'Log out'),
           ),
         ],
       ),
