@@ -3,6 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'database.dart';
+import 'growth_page.dart';
+import 'home_preview.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -61,7 +63,7 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const MainNavigation();
+          return MainNavigation(ownerId: snapshot.data!.uid);
         }
 
         return const LoginPage();
@@ -543,33 +545,31 @@ InputDecoration _authDecoration({
 
 
 class MainNavigation extends StatefulWidget {
-  const MainNavigation({super.key});
+  final String ownerId;
+  const MainNavigation({super.key, required this.ownerId});
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  int selectedIndex = 3;
+  int selectedIndex = 0;
+  int? selectedChildId;
 
-  final List<Widget> pages = const [
-    PlaceholderPage(
-      title: 'Home',
-      subtitle: 'Your daily wellness overview will go here.',
-      icon: Icons.home_rounded,
-    ),
-    PlaceholderPage(
-      title: 'Growth',
-      subtitle: 'Track growth and progress here.',
-      icon: Icons.trending_up_rounded,
-    ),
-    PlaceholderPage(
+  List<Widget> get pages => [
+    HomePage(ownerId: widget.ownerId, visible: selectedIndex == 0, selectedChildId: selectedChildId,
+      onChildSelected: (id) => setState(() => selectedChildId = id),
+      onNavigate: (index) => setState(() => selectedIndex = index)),
+    GrowthPage(ownerId: widget.ownerId, initialChildId: selectedChildId,
+      visible: selectedIndex == 1,
+      onChildSelected: (id) => setState(() => selectedChildId = id)),
+    const PlaceholderPage(
       title: 'Nutrition',
       subtitle: 'Your nutrition information will go here.',
       icon: Icons.spa_rounded,
     ),
-    RecipesPage(),
-    MorePage(),
+    const RecipesPage(),
+    const MorePage(),
   ];
 
   @override
