@@ -19,6 +19,7 @@ const Color rose = Color(0xFFB94E70);
 const Color cream = Color(0xFFFFFAF5);
 const Color ink = Color(0xFF302A2D);
 const Color sage = Color(0xFFE7EFD9);
+const Color growWellBlue = Color(0xFF1684D2);
 
 class GrowWell extends StatelessWidget {
   const GrowWell({super.key});
@@ -144,6 +145,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F9FC),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -154,13 +156,23 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Container(
-                    height: 112,
+                    padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
                     decoration: BoxDecoration(
-                      color: blush,
-                      borderRadius: BorderRadius.circular(30),
+                      color: growWellBlue,
+                      borderRadius: BorderRadius.circular(26),
                     ),
-                    child: const Center(
-                      child: Text('🥑 🫐 🍓', style: TextStyle(fontSize: 42)),
+                    child: const Column(
+                      children: [
+                        CircleAvatar(
+                          radius: 29,
+                          backgroundColor: Colors.white,
+                          child: Icon(Icons.spa, color: growWellBlue, size: 34),
+                        ),
+                        SizedBox(height: 10),
+                        Text('GrowWell', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
+                        SizedBox(height: 3),
+                        Text('Healthy Growth, Brighter Future', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 13)),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 28),
@@ -189,6 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: _authDecoration(
                       hint: 'you@example.com',
                       icon: Icons.mail_outline_rounded,
+                      accent: growWellBlue,
                     ),
                     validator: (value) {
                       final email = value?.trim() ?? '';
@@ -209,6 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                     decoration: _authDecoration(
                       hint: 'Enter your password',
                       icon: Icons.lock_outline_rounded,
+                      accent: growWellBlue,
                     ).copyWith(
                       suffixIcon: IconButton(
                         onPressed: () =>
@@ -232,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
                   FilledButton(
                     onPressed: _login,
                     style: FilledButton.styleFrom(
-                      backgroundColor: rose,
+                      backgroundColor: growWellBlue,
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(52),
                       shape: RoundedRectangleBorder(
@@ -259,7 +273,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: const Text(
                           'Create an account',
                           style: TextStyle(
-                              color: rose, fontWeight: FontWeight.bold),
+                              color: growWellBlue, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ],
@@ -521,10 +535,11 @@ class _RegisterPageState extends State<RegisterPage> {
 InputDecoration _authDecoration({
   required String hint,
   required IconData icon,
+  Color accent = rose,
 }) {
   return InputDecoration(
     hintText: hint,
-    prefixIcon: Icon(icon, color: rose),
+    prefixIcon: Icon(icon, color: accent),
     filled: true,
     fillColor: Colors.white,
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
@@ -538,7 +553,7 @@ InputDecoration _authDecoration({
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: const BorderSide(color: rose, width: 1.5),
+      borderSide: BorderSide(color: accent, width: 1.5),
     ),
   );
 }
