@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'growth_repository.dart';
+import 'height_chart.dart';
+import 'who_height_reference.dart';
 
 class GrowthPage extends StatefulWidget {
   final String ownerId;
@@ -7,13 +9,15 @@ class GrowthPage extends StatefulWidget {
   final bool visible;
   final ValueChanged<int>? onChildSelected;
   final GrowthRepository? repository;
+  final Future<WhoHeightReference>? heightReference;
   const GrowthPage(
       {super.key,
       required this.ownerId,
       this.initialChildId,
       this.visible = true,
       this.onChildSelected,
-      this.repository});
+      this.repository,
+      this.heightReference});
   @override
   State<GrowthPage> createState() => _GrowthPageState();
 }
@@ -23,7 +27,10 @@ class _GrowthPageState extends State<GrowthPage> {
   List<Map<String, Object?>> children = [];
   List<Map<String, Object?>> records = [];
   int? selectedId;
+  int? selectedMeasurementId;
   int indicator = 0;
+  bool showProgress = false;
+  final ScrollController scrollController = ScrollController();
   bool loading = true;
   String? error;
   int loadRequest = 0;
@@ -36,11 +43,21 @@ class _GrowthPageState extends State<GrowthPage> {
   }
 
   @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   void didUpdateWidget(covariant GrowthPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.initialChildId != oldWidget.initialChildId ||
         (widget.visible && !oldWidget.visible)) {
-      if (widget.initialChildId != null) selectedId = widget.initialChildId;
+      if (widget.initialChildId != null &&
+          widget.initialChildId != selectedId) {
+        selectedId = widget.initialChildId;
+        selectedMeasurementId = null;
+      }
       loading = true;
       load();
     }
@@ -58,6 +75,11 @@ class _GrowthPageState extends State<GrowthPage> {
           : await repo.measurements(widget.ownerId, id);
       if (!mounted || request != loadRequest) return;
       setState(() {
+        if (selectedId != id ||
+            !entries.any((entry) => entry['id'] == selectedMeasurementId)) {
+          selectedMeasurementId =
+              entries.isEmpty ? null : entries.first['id'] as int;
+        }
         children = list;
         selectedId = id;
         records = entries;
@@ -152,8 +174,13 @@ class _GrowthPageState extends State<GrowthPage> {
     await route.completed;
     if (result == true) {
       try {
-        await repo.addMeasurement(widget.ownerId, selectedId!, dateText(date),
-            double.parse(height.text), double.parse(weight.text), method);
+        selectedMeasurementId = await repo.addMeasurement(
+            widget.ownerId,
+            selectedId!,
+            dateText(date),
+            double.parse(height.text),
+            double.parse(weight.text),
+            method);
         await load();
       } catch (_) {
         showError();
@@ -186,13 +213,19 @@ class _GrowthPageState extends State<GrowthPage> {
         child: Column(children: [
           Container(
             width: double.infinity,
-            color: green,
+            color: showProgress ? const Color(0xFF51409B) : green,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(children: [
-              const Icon(Icons.show_chart, color: Colors.white),
+              if (showProgress)
+                IconButton(
+                    tooltip: 'Back to growth chart',
+                    onPressed: () => setState(() => showProgress = false),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white))
+              else
+                const Icon(Icons.show_chart, color: Colors.white),
               const SizedBox(width: 16),
-              const Expanded(
-                  child: Text('Growth Chart',
+              Expanded(
+                  child: Text(showProgress ? 'Growth Progress' : 'Growth Chart',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 21,
@@ -206,7 +239,7 @@ class _GrowthPageState extends State<GrowthPage> {
                     builder: (context) => AlertDialog(
                           title: const Text('About growth charts'),
                           content: const Text(
-                              'Growth is assessed using a child’s age, measurements and appropriate reference data. The WHO chart and calculations are still being prepared. Speak with a healthcare professional about any concerns.'),
+                              'Height-for-age uses WHO reference values. The result is a screening aid, not a diagnosis. Discuss concerns with a healthcare professional.'),
                           actions: [
                             TextButton(
                                 onPressed: () => Navigator.pop(context),
@@ -229,200 +262,158 @@ class _GrowthPageState extends State<GrowthPage> {
                                   onPressed: load,
                                   child: const Text('Try again'))
                             ]))
-                      : ListView(padding: const EdgeInsets.all(14), children: [
-                          Row(children: [
-                            Expanded(
-                                child: children.isEmpty
-                                    ? const Text(
-                                        'Add a child on the Home page to get started.',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w600))
-                                    : DropdownButtonFormField<int>(
-                                        key: ValueKey(selectedId),
-                                        initialValue: children.any(
-                                                (c) => c['id'] == selectedId)
-                                            ? selectedId
-                                            : null,
-                                        decoration: const InputDecoration(
-                                            labelText: 'Selected child',
-                                            border: OutlineInputBorder(),
-                                            isDense: true),
-                                        items: children
-                                            .map((c) => DropdownMenuItem(
-                                                value: c['id'] as int,
-                                                child:
-                                                    Text(c['name'] as String)))
-                                            .toList(),
-                                        onChanged: (id) {
-                                          setState(() {
-                                            selectedId = id;
-                                            records = [];
-                                          });
-                                          if (id != null)
-                                            widget.onChildSelected?.call(id);
-                                          load();
+                      : ListView(
+                          controller: scrollController,
+                          padding: const EdgeInsets.all(14),
+                          children: [
+                              Row(children: [
+                                Expanded(
+                                    child: children.isEmpty
+                                        ? const Text(
+                                            'Add a child on the Home page to get started.',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.w600))
+                                        : DropdownButtonFormField<int>(
+                                            key: ValueKey(selectedId),
+                                            initialValue: children.any((c) =>
+                                                    c['id'] == selectedId)
+                                                ? selectedId
+                                                : null,
+                                            decoration: const InputDecoration(
+                                                labelText: 'Selected child',
+                                                border: OutlineInputBorder(),
+                                                isDense: true),
+                                            items: children
+                                                .map((c) => DropdownMenuItem(
+                                                    value: c['id'] as int,
+                                                    child: Text(
+                                                        c['name'] as String)))
+                                                .toList(),
+                                            onChanged: (id) {
+                                              setState(() {
+                                                selectedId = id;
+                                                selectedMeasurementId = null;
+                                                records = [];
+                                              });
+                                              if (id != null)
+                                                widget.onChildSelected
+                                                    ?.call(id);
+                                              load();
+                                            },
+                                          )),
+                              ]),
+                              const SizedBox(height: 14),
+                              if (!showProgress)
+                                SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+                                    child: Row(
+                                      children: List.generate(
+                                          labels.length,
+                                          (i) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                    right: 6),
+                                                child: ChoiceChip(
+                                                    label: Text(labels[i]),
+                                                    selected: indicator == i,
+                                                    selectedColor: green,
+                                                    backgroundColor:
+                                                        const Color(0xFFEDEFF4),
+                                                    labelStyle: TextStyle(
+                                                        color: indicator == i
+                                                            ? Colors.white
+                                                            : Colors.black87,
+                                                        fontWeight:
+                                                            FontWeight.w600),
+                                                    onSelected: (_) => setState(
+                                                        () => indicator = i)),
+                                              )),
+                                    )),
+                              const SizedBox(height: 12),
+                              if (indicator == 0)
+                                HeightChart(
+                                    child: child,
+                                    records: records,
+                                    selectedRecord: records
+                                        .where((record) =>
+                                            record['id'] ==
+                                            selectedMeasurementId)
+                                        .firstOrNull,
+                                    progress: showProgress,
+                                    reference: widget.heightReference)
+                              else
+                                const Card(
+                                    child: Padding(
+                                        padding: EdgeInsets.all(20),
+                                        child: Text(
+                                            'BMI-for-age chart and interpretation are not available yet.'))),
+                              if (!showProgress &&
+                                  indicator == 0 &&
+                                  child != null)
+                                Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12),
+                                    child: FilledButton.icon(
+                                        onPressed: () {
+                                          setState(() => showProgress = true);
+                                          scrollController.animateTo(0,
+                                              duration: const Duration(
+                                                  milliseconds: 300),
+                                              curve: Curves.easeOut);
                                         },
-                                      )),
-                          ]),
-                          const SizedBox(height: 14),
-                          SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: List.generate(
-                                    labels.length,
-                                    (i) => Padding(
-                                          padding:
-                                              const EdgeInsets.only(right: 6),
-                                          child: ChoiceChip(
-                                              label: Text(labels[i]),
-                                              selected: indicator == i,
-                                              selectedColor: green,
-                                              backgroundColor:
-                                                  const Color(0xFFEDEFF4),
-                                              labelStyle: TextStyle(
-                                                  color: indicator == i
-                                                      ? Colors.white
-                                                      : Colors.black87,
-                                                  fontWeight: FontWeight.w600),
-                                              onSelected: (_) => setState(
-                                                  () => indicator = i)),
-                                        )),
-                              )),
-                          const SizedBox(height: 12),
-                          Card(
-                              color: Colors.white,
-                              elevation: 0,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(labels[indicator],
-                                          style: const TextStyle(
-                                              fontSize: 17,
-                                              fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 14),
-                                      SizedBox(
-                                          height: 245,
-                                          width: double.infinity,
-                                          child: Stack(children: [
-                                            Positioned.fill(
-                                                child: CustomPaint(
-                                                    painter: _GridPainter())),
-                                            Center(
-                                                child: Container(
-                                              margin: const EdgeInsets.all(24),
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.95),
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: Text(
-                                                  child == null
-                                                      ? 'Select or add a child to get started.'
-                                                      : 'WHO references and results are not connected yet.',
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(
-                                                      color: Colors.black54)),
-                                            )),
-                                          ])),
-                                      const SizedBox(height: 12),
-                                      const Row(children: [
-                                        Icon(Icons.circle,
-                                            color: green, size: 12),
-                                        SizedBox(width: 8),
-                                        Expanded(
-                                            child: Text(
-                                                'Measurements will appear here when the chart is ready',
-                                                style: TextStyle(fontSize: 12)))
-                                      ]),
-                                      const SizedBox(height: 6),
-                                      const Text(
-                                          'WHO reference data not loaded yet',
-                                          style: TextStyle(
-                                              color: Colors.black54,
-                                              fontSize: 12)),
-                                    ]),
-                              )),
-                          const SizedBox(height: 12),
-                          Card(
-                              color: const Color(0xFFFFF1F2),
-                              elevation: 0,
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('${labels[indicator]} Z-score',
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 8),
-                                      const Text('Not available yet',
-                                          style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                          'Results will appear when WHO calculations are available.',
-                                          style:
-                                              TextStyle(color: Colors.black54)),
-                                    ]),
-                              )),
-                          const SizedBox(height: 16),
-                          Row(children: [
-                            const Expanded(
-                                child: Text('Measurement History',
-                                    style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold))),
-                            TextButton.icon(
-                                onPressed:
-                                    child == null ? null : addMeasurement,
-                                icon: const Icon(Icons.add),
-                                label: const Text('Add')),
-                          ]),
-                          if (child == null)
-                            const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                child: Text('Select or add a child first.'))
-                          else if (records.isEmpty)
-                            const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 16),
-                                child: Text('No measurements yet.'))
-                          else
-                            ...records.map((r) => Card(
-                                color: Colors.white,
-                                elevation: 0,
-                                child: ListTile(
-                                  title: Text(r['date'] as String),
-                                  subtitle: Text(
-                                      '${r['height']} cm  •  ${r['weight']} kg  •  ${r['method'] == 'lying' ? 'lying down' : 'standing'}'),
-                                ))),
-                        ])),
+                                        icon: const Icon(Icons.timeline),
+                                        label: const Text(
+                                            'View Growth Progress'))),
+                              const SizedBox(height: 16),
+                              Row(children: [
+                                const Expanded(
+                                    child: Text('Measurement History',
+                                        style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold))),
+                                TextButton.icon(
+                                    onPressed:
+                                        child == null ? null : addMeasurement,
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Add measurement')),
+                              ]),
+                              if (child == null)
+                                const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Text('Select or add a child first.'))
+                              else if (records.isEmpty)
+                                const Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    child: Text('No measurements yet.'))
+                              else
+                                ...records.map((r) => Card(
+                                    color: Colors.white,
+                                    elevation: 0,
+                                    child: ListTile(
+                                      selected:
+                                          r['id'] == selectedMeasurementId &&
+                                              !showProgress,
+                                      selectedTileColor:
+                                          const Color(0xFFE3F5EB),
+                                      onTap: () {
+                                        setState(() {
+                                          selectedMeasurementId =
+                                              r['id'] as int;
+                                          showProgress = false;
+                                          indicator = 0;
+                                        });
+                                        scrollController.animateTo(0,
+                                            duration: const Duration(
+                                                milliseconds: 300),
+                                            curve: Curves.easeOut);
+                                      },
+                                      title: Text(r['date'] as String),
+                                      subtitle: Text(
+                                          'Age: ${measurementAge(DateTime.parse(child!['birth'] as String), DateTime.parse(r['date'] as String))}  •  ${r['height']} cm  •  ${r['weight']} kg'),
+                                      trailing: const Icon(Icons.chevron_right),
+                                    ))),
+                            ])),
         ]),
       ),
     );
   }
-}
-
-class _GridPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final line = Paint()
-      ..color = const Color(0xFFE2E4E8)
-      ..strokeWidth = 1;
-    for (var i = 0; i <= 8; i++) {
-      final y = size.height * i / 8;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), line);
-      final x = size.width * i / 8;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), line);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -31,14 +31,14 @@ class GrowthRepository {
           'SELECT m.* FROM growth_measurements m JOIN growth_children c ON c.id = m.child_id WHERE c.owner = ? AND c.id = ? ORDER BY m.date DESC, m.id DESC',
           [owner, childId]);
 
-  Future<void> addMeasurement(String owner, int childId, String date,
+  Future<int> addMeasurement(String owner, int childId, String date,
       double height, double weight, String method) async {
     final db = await DatabaseHelper.database;
-    await db.transaction((txn) async {
+    return db.transaction((txn) async {
       final child = await txn.query('growth_children',
           where: 'owner = ? AND id = ?', whereArgs: [owner, childId]);
       if (child.isEmpty) throw StateError('Child not found');
-      await txn.insert(
+      return txn.insert(
           'growth_measurements',
           {
             'child_id': childId,
