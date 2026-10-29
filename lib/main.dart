@@ -22,6 +22,7 @@ const Color cream = Color(0xFFF6F7FC);
 const Color ink = Color(0xFF20243A);
 
 const Color sage = Color(0xFFE0F3E9);
+const Color growWellBlue = Color(0xFF1684D2);
 
 class GrowWell extends StatelessWidget {
   const GrowWell({super.key});
