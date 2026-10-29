@@ -12,11 +12,14 @@ void main() async {
   runApp(const GrowWell());
 }
 
-const Color blush = Color(0xFFF7DCE4);
-const Color rose = Color(0xFFB94E70);
-const Color cream = Color(0xFFFFFAF5);
-const Color ink = Color(0xFF302A2D);
-const Color sage = Color(0xFFE7EFD9);
+const Color blush = Color(0xFFE8E2FA);
+
+const Color rose = Color(0xFF5B3DBB);
+
+const Color cream = Color(0xFFF6F7FC);
+const Color ink = Color(0xFF20243A);
+
+const Color sage = Color(0xFFE0F3E9);
 
 class GrowWell extends StatelessWidget {
   const GrowWell({super.key});
@@ -40,10 +43,12 @@ class GrowWell extends StatelessWidget {
   }
 }
 
+// Demo authentication flow
 
-// Demo authentication flow.
-// This validates form input locally; it does NOT create real accounts or
-// securely authenticate users. Connect a backend such as Firebase Auth for that.
+// This validates form input locally; it does NOT create real accounts or*
+
+// securely authenticate users. Connect a backend such as Firebase Auth for that
+
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -79,65 +84,78 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
+
   bool _hidePassword = true;
 
   @override
   void dispose() {
     _emailController.dispose();
+
     _passwordController.dispose();
+
     super.dispose();
   }
 
   Future<void> _login() async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  try {
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    // AuthGate will automatically show MainNavigation.
-  } on FirebaseAuthException catch (e) {
-    if (!mounted) return;
+      // AuthGate will automatically show MainNavigation
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
 
-    String message;
+      String message;
 
-    switch (e.code) {
-      case 'user-not-found':
-      case 'invalid-credential':
-        message = 'Incorrect email or password.';
-        break;
-      case 'wrong-password':
-        message = 'Incorrect email or password.';
-        break;
-      case 'invalid-email':
-        message = 'Please enter a valid email address.';
-        break;
-      case 'too-many-requests':
-        message = 'Too many attempts. Please try again later.';
-        break;
-      default:
-        message = e.message ?? 'Login failed. Please try again.';
+      switch (e.code) {
+        case 'user-not-found':
+        case 'invalid-credential':
+          message = 'Incorrect email or password.';
+
+          break;
+
+        case 'wrong-password':
+          message = 'Incorrect email or password.';
+
+          break;
+
+        case 'invalid-email':
+          message = 'Please enter a valid email address.';
+
+          break;
+
+        case 'too-many-requests':
+          message = 'Too many attempts. Please try again later.';
+
+          break;
+
+        default:
+          message = e.message ?? 'Login failed. Please try again.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Something went wrong. Please try again.'),
+        ),
+      );
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  } catch (e) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Something went wrong. Please try again.'),
-      ),
-    );
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -190,10 +208,13 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     validator: (value) {
                       final email = value?.trim() ?? '';
-                      if (email.isEmpty || !email.contains('@') ||
+
+                      if (email.isEmpty ||
+                          !email.contains('@') ||
                           !email.contains('.')) {
                         return 'Enter a valid email address.';
                       }
+
                       return null;
                     },
                   ),
@@ -220,9 +241,11 @@ class _LoginPageState extends State<LoginPage> {
                       if (value == null || value.isEmpty) {
                         return 'Enter your password.';
                       }
+
                       if (value.length < 6) {
                         return 'Use at least 6 characters for this demo.';
                       }
+
                       return null;
                     },
                   ),
@@ -281,109 +304,131 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+
   final _nameController = TextEditingController();
+
   final _emailController = TextEditingController();
+
   final _passwordController = TextEditingController();
+
   final _confirmController = TextEditingController();
+
   bool _hidePassword = true;
+
   bool _agreeToTerms = false;
 
   @override
   void dispose() {
     _nameController.dispose();
+
     _emailController.dispose();
+
     _passwordController.dispose();
+
     _confirmController.dispose();
+
     super.dispose();
   }
 
   Future<void> _register() async {
-  if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) return;
 
-  if (!_agreeToTerms) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please agree to continue.'),
-      ),
-    );
-    return;
-  }
-
-  try {
-    // Create a real Firebase account.
-    final credential =
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-    );
-
-    final user = credential.user;
-
-    if (user == null) {
-      throw Exception('Account creation failed.');
-    }
-
-    // Save the profile in SQLite.
-    await DatabaseHelper.saveProfile(
-      uid: user.uid,
-      name: _nameController.text.trim(),
-      email: user.email ?? _emailController.text.trim(),
-    );
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Account created successfully! 💗'),
-      ),
-    );
-
-    // Firebase signs the user in automatically after registration.
-    // Signing out lets them return to the login page and sign in normally.
-    await FirebaseAuth.instance.signOut();
-
-    if (!mounted) return;
-
-    Navigator.of(context).pop();
-  } on FirebaseAuthException catch (e) {
-    if (!mounted) return;
-
-    String message;
-
-    switch (e.code) {
-      case 'email-already-in-use':
-        message = 'This email already has an account.';
-        break;
-      case 'invalid-email':
-        message = 'Please enter a valid email address.';
-        break;
-      case 'weak-password':
-        message = 'Please choose a stronger password.';
-        break;
-      default:
-        message = e.message ?? 'Registration failed. Please try again.';
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  } catch (e) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Your account may have been created, but saving your profile failed. Please check your connection and try again.',
+    if (!_agreeToTerms) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please agree to continue.'),
         ),
-      ),
-    );
+      );
+
+      return;
+    }
+
+    try {
+      // Create a real Firebase account
+
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      final user = credential.user;
+
+      if (user == null) {
+        throw Exception('Account creation failed.');
+      }
+
+      // Save the profile in SQLite
+
+      await DatabaseHelper.saveProfile(
+        uid: user.uid,
+        name: _nameController.text.trim(),
+        email: user.email ?? _emailController.text.trim(),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created successfully! 💗'),
+        ),
+      );
+
+      // Firebase signs the user in automatically after registration
+
+      // Signing out lets them return to the login page and sign in normally
+
+      await FirebaseAuth.instance.signOut();
+
+      if (!mounted) return;
+
+      Navigator.of(context).pop();
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message;
+
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'This email already has an account.';
+
+          break;
+
+        case 'invalid-email':
+          message = 'Please enter a valid email address.';
+
+          break;
+
+        case 'weak-password':
+          message = 'Please choose a stronger password.';
+
+          break;
+
+        default:
+          message = e.message ?? 'Registration failed. Please try again.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Your account may have been created, but saving your profile failed. Please check your connection and try again.',
+          ),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: cream, title: const Text('Create account')),
+      appBar:
+          AppBar(backgroundColor: cream, title: const Text('Create account')),
       body: SafeArea(
         child: Form(
           key: _formKey,
@@ -422,14 +467,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: _authDecoration(
-                    hint: 'you@example.com',
-                    icon: Icons.mail_outline_rounded),
+                    hint: 'you@example.com', icon: Icons.mail_outline_rounded),
                 validator: (value) {
                   final email = value?.trim() ?? '';
-                  if (email.isEmpty || !email.contains('@') ||
+
+                  if (email.isEmpty ||
+                      !email.contains('@') ||
                       !email.contains('.')) {
                     return 'Enter a valid email address.';
                   }
+
                   return null;
                 },
               ),
@@ -456,6 +503,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   if (value == null || value.length < 6) {
                     return 'Use at least 6 characters.';
                   }
+
                   return null;
                 },
               ),
@@ -540,7 +588,6 @@ InputDecoration _authDecoration({
     ),
   );
 }
-
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -634,9 +681,11 @@ class _MorePageState extends State<MorePage> {
 
     try {
       await FirebaseAuth.instance.signOut();
-      // AuthGate returns the user to the login screen.
+
+      // AuthGate returns the user to the login screen
     } catch (_) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not log out. Please try again.')),
       );
@@ -680,7 +729,9 @@ class _MorePageState extends State<MorePage> {
 
 class PlaceholderPage extends StatelessWidget {
   final String title;
+
   final String subtitle;
+
   final IconData icon;
 
   const PlaceholderPage({
@@ -729,13 +780,21 @@ class PlaceholderPage extends StatelessWidget {
 
 class Recipe {
   final String name;
+
   final String category;
+
   final String description;
+
   final String time;
+
   final String difficulty;
+
   final String emoji;
+
   final Color color;
+
   final List<String> ingredients;
+
   final List<String> steps;
 
   const Recipe({
@@ -878,18 +937,23 @@ class RecipesPage extends StatefulWidget {
 
 class _RecipesPageState extends State<RecipesPage> {
   String selectedCategory = 'All';
+
   String searchText = '';
+
   final Set<String> favourites = {};
 
   @override
   Widget build(BuildContext context) {
     final filteredRecipes = sampleRecipes.where((recipe) {
-      final matchesCategory = selectedCategory == 'All' ||
-          recipe.category == selectedCategory;
+      final matchesCategory =
+          selectedCategory == 'All' || recipe.category == selectedCategory;
+
       final query = searchText.toLowerCase().trim();
+
       final matchesSearch = recipe.name.toLowerCase().contains(query) ||
           recipe.category.toLowerCase().contains(query) ||
           recipe.ingredients.any((item) => item.toLowerCase().contains(query));
+
       return matchesCategory && matchesSearch;
     }).toList();
 
@@ -902,45 +966,53 @@ class _RecipesPageState extends State<RecipesPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'GROWWELL  ✿',
-                              style: TextStyle(
-                                color: rose,
-                                fontSize: 11,
-                                letterSpacing: 1.6,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 7),
-                            Text(
-                              'Recipes',
-                              style: TextStyle(
-                                color: ink,
-                                fontSize: 32,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(20, 20, 18, 20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6D4BC3), Color(0xFF4930A0)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: const [
+                              Text('GROWWELL  ✿',
+                                  style: TextStyle(
+                                      color: Color(0xFFE9E2FF),
+                                      fontSize: 11,
+                                      letterSpacing: 1.6,
+                                      fontWeight: FontWeight.bold)),
+                              SizedBox(height: 7),
+                              Text('Healthy Recipes',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 27,
+                                      fontWeight: FontWeight.w800)),
+                              SizedBox(height: 5),
+                              Text('Little meals, brighter days.',
+                                  style: TextStyle(
+                                      color: Colors.white70, fontSize: 13)),
+                            ],
+                          ),
                         ),
-                      ),
-                      CircleAvatar(
-                        radius: 25,
-                        backgroundColor: blush,
-                        child: Icon(Icons.restaurant_menu_rounded,
-                            color: rose, size: 26),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Little ideas for delicious, feel-good meals.',
-                    style: TextStyle(color: Colors.black54, fontSize: 14),
+                        Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.16),
+                              borderRadius: BorderRadius.circular(18)),
+                          child: const Icon(Icons.restaurant_menu_rounded,
+                              color: Colors.white, size: 29),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -975,7 +1047,9 @@ class _RecipesPageState extends State<RecipesPage> {
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
                       itemBuilder: (context, index) {
                         final category = categories[index];
+
                         final isSelected = category == selectedCategory;
+
                         return ChoiceChip(
                           label: Text(category),
                           selected: isSelected,
@@ -1038,6 +1112,7 @@ class _RecipesPageState extends State<RecipesPage> {
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
                     final recipe = filteredRecipes[index];
+
                     return RecipeCard(
                       recipe: recipe,
                       isFavourite: favourites.contains(recipe.name),
@@ -1062,7 +1137,9 @@ class _RecipesPageState extends State<RecipesPage> {
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
+
   final bool isFavourite;
+
   final VoidCallback onFavouriteTap;
 
   const RecipeCard({
@@ -1098,7 +1175,8 @@ class RecipeCard extends StatelessWidget {
                   width: double.infinity,
                   color: recipe.color,
                   alignment: Alignment.center,
-                  child: Text(recipe.emoji, style: const TextStyle(fontSize: 68)),
+                  child:
+                      Text(recipe.emoji, style: const TextStyle(fontSize: 68)),
                 ),
                 Positioned(
                   top: 12,
@@ -1164,11 +1242,9 @@ class RecipeCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Icon(Icons.schedule_rounded,
-                          size: 16, color: rose),
+                      const Icon(Icons.schedule_rounded, size: 16, color: rose),
                       const SizedBox(width: 5),
-                      Text(recipe.time,
-                          style: const TextStyle(fontSize: 12)),
+                      Text(recipe.time, style: const TextStyle(fontSize: 12)),
                       const SizedBox(width: 16),
                       const Icon(Icons.local_fire_department_outlined,
                           size: 16, color: rose),
@@ -1256,8 +1332,7 @@ class RecipeDetailPage extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.check_circle_outline,
-                      color: rose, size: 20),
+                  const Icon(Icons.check_circle_outline, color: rose, size: 20),
                   const SizedBox(width: 10),
                   Expanded(child: Text(ingredient)),
                 ],
@@ -1312,6 +1387,7 @@ class RecipeDetailPage extends StatelessWidget {
 
 class _InfoPill extends StatelessWidget {
   final IconData icon;
+
   final String text;
 
   const _InfoPill({required this.icon, required this.text});
