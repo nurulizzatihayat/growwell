@@ -631,6 +631,7 @@ class _MorePageState extends State<MorePage> {
 
   Future<void> _logout() async {
     setState(() => _loggingOut = true);
+
     try {
       await FirebaseAuth.instance.signOut();
       // AuthGate returns the user to the login screen.
