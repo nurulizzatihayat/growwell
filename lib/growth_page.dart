@@ -133,7 +133,7 @@ class _GrowthPageState extends State<GrowthPage> {
                         decoration:
                             const InputDecoration(labelText: 'Weight (kg)')),
                     DropdownButtonFormField<String>(
-                        initialValue: method,
+                        value: method,
                         decoration:
                             const InputDecoration(labelText: 'Measured'),
                         items: const [
@@ -275,7 +275,7 @@ class _GrowthPageState extends State<GrowthPage> {
                                                 fontWeight: FontWeight.w600))
                                         : DropdownButtonFormField<int>(
                                             key: ValueKey(selectedId),
-                                            initialValue: children.any((c) =>
+                                            value: children.any((c) =>
                                                     c['id'] == selectedId)
                                                 ? selectedId
                                                 : null,

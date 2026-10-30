@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                             const InputDecoration(labelText: 'Child’s name')),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                        initialValue: sex,
+                        value: sex,
                         decoration: const InputDecoration(
                             labelText: 'Sex for growth reference'),
                         items: const [

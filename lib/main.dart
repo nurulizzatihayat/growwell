@@ -3,8 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'database.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'growth_page.dart';
 import 'home_preview.dart';
+import 'recipe.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,15 +16,37 @@ void main() async {
   runApp(const GrowWell());
 }
 
-const Color blush = Color(0xFFE8E2FA);
+// Shared neutral colours
+const Color appBackground = Color(0xFFFAFAFC);
+const Color cardWhite = Color(0xFFFFFFFF);
+const Color ink = Color(0xFF24252B);
+const Color secondaryText = Color(0xFF70717A);
+const Color borderGrey = Color(0xFFE5E5EA);
 
-const Color rose = Color(0xFF5B3DBB);
+// Home — Blue
+const Color homeBlue = Color(0xFF2878D0);
+const Color homeBlueLight = Color(0xFFEAF3FF);
+const Color homeBlueDark = Color(0xFF17549B);
 
-const Color cream = Color(0xFFF6F7FC);
-const Color ink = Color(0xFF20243A);
+// Growth — Yellow
+const Color growthYellow = Color(0xFFF2C230);
+const Color growthYellowLight = Color(0xFFFFF7D6);
+const Color growthYellowDark = Color(0xFF946900);
 
-const Color sage = Color(0xFFE0F3E9);
-const Color growWellBlue = Color(0xFF1684D2);
+// Nutrition — Green
+const Color nutritionGreen = Color(0xFF32966A);
+const Color nutritionGreenLight = Color(0xFFE5F5EB);
+const Color nutritionGreenDark = Color(0xFF216747);
+
+// Recipes — Red
+const Color recipesRed = Color(0xFFE34D4D);
+const Color recipesRedLight = Color(0xFFFDEAEA);
+const Color recipesRedDark = Color(0xFFB92F38);
+
+// More — Neutral
+const Color moreCharcoal = Color(0xFF45464F);
+const Color moreGreyLight = Color(0xFFF0F0F3);
+const Color moreCharcoalDark = Color(0xFF292A30);
 
 class GrowWell extends StatelessWidget {
   const GrowWell({super.key});
@@ -34,10 +58,10 @@ class GrowWell extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: cream,
+        scaffoldBackgroundColor: const Color(0xFFF8FAFD),
         colorScheme: ColorScheme.fromSeed(
-          seedColor: rose,
-          surface: cream,
+          seedColor: const Color(0xFF2878D0), 
+          surface: const Color(0xFFFFFFFF),
         ),
         fontFamily: 'Roboto',
       ),
@@ -45,12 +69,6 @@ class GrowWell extends StatelessWidget {
     );
   }
 }
-
-// Demo authentication flow
-
-// This validates form input locally; it does NOT create real accounts or*
-
-// securely authenticate users. Connect a backend such as Firebase Auth for that
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -63,7 +81,9 @@ class AuthGate extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                color: Color(0xFF2878D0),
+              ), 
             ),
           );
         }
@@ -78,6 +98,7 @@ class AuthGate extends StatelessWidget {
   }
 }
 
+//LOGIN
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -87,9 +108,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _emailController = TextEditingController();
-
   final _passwordController = TextEditingController();
 
   bool _hidePassword = true;
@@ -97,9 +116,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     _emailController.dispose();
-
     _passwordController.dispose();
-
     super.dispose();
   }
 
@@ -112,9 +129,7 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text,
       );
 
-      if (!mounted) return;
-
-      // AuthGate will automatically show MainNavigation
+      // AuthGate will automatically show MainNavigation.
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
 
@@ -123,38 +138,28 @@ class _LoginPageState extends State<LoginPage> {
       switch (e.code) {
         case 'user-not-found':
         case 'invalid-credential':
-          message = 'Incorrect email or password.';
-
-          break;
-
         case 'wrong-password':
-          message = 'Incorrect email or password.';
-
+          message = 'Emel atau kata laluan salah. Sila cuba lagi.';
           break;
-
         case 'invalid-email':
-          message = 'Please enter a valid email address.';
-
+          message = 'Sila masukkan alamat emel yang sah.';
           break;
-
         case 'too-many-requests':
-          message = 'Too many attempts. Please try again later.';
-
+          message = 'Terlalu banyak percubaan. Sila cuba lagi kemudian.';
           break;
-
         default:
-          message = e.message ?? 'Login failed. Please try again.';
+          message = e.message ?? 'Log masuk gagal. Sila cuba lagi.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Something went wrong. Please try again.'),
+          content: Text('Sila semak sambungan internet anda dan cuba lagi.'),
         ),
       );
     }
@@ -162,146 +167,262 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    const blue = Color(0xFF1A73E8);
+    const darkText = Color(0xFF202124);
+    const secondaryText = Color(0xFF5F6368);
+    const borderColor = Color(0xFFDADCE0);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FC),
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(vertical: 26, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: growWellBlue,
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    child: const Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 29,
-                          backgroundColor: Colors.white,
-                          child: Icon(Icons.spa, color: growWellBlue, size: 34),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 28,
+              vertical: 32,
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Simple app icon
+                    Center(
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE8F0FE),
+                          borderRadius: BorderRadius.circular(18),
                         ),
-                        SizedBox(height: 10),
-                        Text('GrowWell', style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w800)),
-                        SizedBox(height: 3),
-                        Text('Healthy Growth, Brighter Future', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 13)),
+                        child: const Icon(
+                          Icons.spa_outlined,
+                          size: 30,
+                          color: blue,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    const Text(
+                      'Anak Sihat, Ibu Ceria',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 27,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -0.6,
+                        color: darkText,
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    const Text(
+                      'Selamat kembali. Log masuk untuk teruskan',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: secondaryText,
+                      ),
+                    ),
+
+                    const SizedBox(height: 36),
+
+                    const Text(
+                      'Emel',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: darkText,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                      decoration: InputDecoration(
+                        hintText: 'Sila masukkan emel anda',
+                        hintStyle: const TextStyle(color: secondaryText),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: blue,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Sila masukkan emel anda.';
+                        }
+
+                        if (!value.contains('@') ||
+                            !value.contains('.')) {
+                          return 'Sila masukkan alamat emel yang sah.';
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    const Text(
+                      'Kata laluan',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: darkText,
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: _hidePassword,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
+                      onFieldSubmitted: (_) => _login(),
+                      decoration: InputDecoration(
+                        hintText: 'Masukkan kata laluan anda',
+                        hintStyle: const TextStyle(color: secondaryText),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 16,
+                        ),
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _hidePassword = !_hidePassword;
+                            });
+                          },
+                          icon: Icon(
+                            _hidePassword
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
+                            color: secondaryText,
+                          ),
+                          tooltip: _hidePassword
+                              ? 'Show password'
+                              : 'Hide password',
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: borderColor),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(color: borderColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: const BorderSide(
+                            color: blue,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Sila masukkan kata laluan anda.';
+                        }
+
+                        return null;
+                      },
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    SizedBox(
+                      height: 48,
+                      child: FilledButton(
+                        onPressed: _login,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: blue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'Log masuk',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Tiada akaun? ",
+                          style: TextStyle(
+                            color: Color(0xFF85858D),
+                            fontSize: 13,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const RegisterPage(),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            'Daftar akaun',
+                            style: TextStyle(
+                              color: Color(0xFF2878D0),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text(
-                    'Welcome back!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: ink,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Sign in and check your children\'s growth progress.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54, fontSize: 14),
-                  ),
-                  const SizedBox(height: 28),
-                  const Text('Email address',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: _authDecoration(
-                      hint: 'you@example.com',
-                      icon: Icons.mail_outline_rounded,
-                      accent: growWellBlue,
-                    ),
-                    validator: (value) {
-                      final email = value?.trim() ?? '';
 
-                      if (email.isEmpty ||
-                          !email.contains('@') ||
-                          !email.contains('.')) {
-                        return 'Enter a valid email address.';
-                      }
+                    const SizedBox(height: 24),
 
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  const Text('Password',
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: _hidePassword,
-                    decoration: _authDecoration(
-                      hint: 'Enter your password',
-                      icon: Icons.lock_outline_rounded,
-                      accent: growWellBlue,
-                    ).copyWith(
-                      suffixIcon: IconButton(
-                        onPressed: () =>
-                            setState(() => _hidePassword = !_hidePassword),
-                        icon: Icon(_hidePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined),
+                    const Text(
+                      'Pastikan tumbesaran anak anda sihat dan ibu bapa gembira.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: secondaryText,
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Enter your password.';
-                      }
-
-                      if (value.length < 6) {
-                        return 'Use at least 6 characters for this demo.';
-                      }
-
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 22),
-                  FilledButton(
-                    onPressed: _login,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: growWellBlue,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    child: const Text('Log in',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("New here? ",
-                          style: TextStyle(color: Colors.black54)),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const RegisterPage(),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          'Create an account',
-                          style: TextStyle(
-                              color: growWellBlue, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -310,6 +431,8 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+//REGISTER
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -320,29 +443,26 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _nameController = TextEditingController();
-
   final _emailController = TextEditingController();
-
   final _passwordController = TextEditingController();
-
   final _confirmController = TextEditingController();
 
   bool _hidePassword = true;
-
+  bool _hideConfirmPassword = true;
   bool _agreeToTerms = false;
+
+  static const Color blue = Color(0xFF1A73E8);
+  static const Color darkText = Color(0xFF202124);
+  static const Color secondaryText = Color(0xFF5F6368);
+  static const Color borderColor = Color(0xFFDADCE0);
 
   @override
   void dispose() {
     _nameController.dispose();
-
     _emailController.dispose();
-
     _passwordController.dispose();
-
     _confirmController.dispose();
-
     super.dispose();
   }
 
@@ -352,16 +472,14 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!_agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please agree to continue.'),
+          content: Text('Sila bersetuju untuk meneruskan.'),
         ),
       );
-
       return;
     }
 
     try {
-      // Create a real Firebase account
-
+      // Create a Firebase account.
       final credential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -371,11 +489,10 @@ class _RegisterPageState extends State<RegisterPage> {
       final user = credential.user;
 
       if (user == null) {
-        throw Exception('Account creation failed.');
+        throw Exception('Akaun tidak dapat dibuat. Sila cuba lagi.');
       }
 
-      // Save the profile in SQLite
-
+      // Save the profile in SQLite.
       await DatabaseHelper.saveProfile(
         uid: user.uid,
         name: _nameController.text.trim(),
@@ -386,14 +503,11 @@ class _RegisterPageState extends State<RegisterPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Account created successfully! 💗'),
+          content: Text('Akaun berjaya dibuat!'),
         ),
       );
 
-      // Firebase signs the user in automatically after registration
-
-      // Signing out lets them return to the login page and sign in normally
-
+      // Sign out so the user can log in normally.
       await FirebaseAuth.instance.signOut();
 
       if (!mounted) return;
@@ -406,22 +520,16 @@ class _RegisterPageState extends State<RegisterPage> {
 
       switch (e.code) {
         case 'email-already-in-use':
-          message = 'This email already has an account.';
-
+          message = 'Emel ini sudah mempunyai akaun.';
           break;
-
         case 'invalid-email':
-          message = 'Please enter a valid email address.';
-
+          message = 'Sila masukkan alamat emel yang sah.';
           break;
-
         case 'weak-password':
-          message = 'Please choose a stronger password.';
-
+          message = 'Sila pilih kata laluan yang lebih kuat.';
           break;
-
         default:
-          message = e.message ?? 'Registration failed. Please try again.';
+          message = e.message ?? 'Pendaftaran gagal. Sila cuba lagi.';
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -433,146 +541,340 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Your account may have been created, but saving your profile failed. Please check your connection and try again.',
+            'Akaun anda mungkin telah dibuat, tetapi gagal menyimpan profil anda. Sila periksa sambungan anda dan cuba lagi.',
           ),
         ),
       );
     }
   }
 
+  InputDecoration _inputDecoration({
+    required String hint,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(
+        color: Color(0xFF80868B),
+        fontSize: 14,
+      ),
+      prefixIcon: Icon(
+        icon,
+        color: secondaryText,
+        size: 21,
+      ),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: borderColor),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: borderColor),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(
+          color: blue,
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: const BorderSide(
+          color: Colors.red,
+          width: 2,
+        ),
+      ),
+    );
+  }
+
+  Widget _fieldLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: darkText,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:
-          AppBar(backgroundColor: cream, title: const Text('Create account')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Create account',
+          style: TextStyle(
+            color: darkText,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        iconTheme: const IconThemeData(color: darkText),
+      ),
       body: SafeArea(
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
-            children: [
-              const Text(
-                'Join GrowWell',
-                style: TextStyle(
-                    color: ink, fontSize: 28, fontWeight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Create an account to get started.',
-                style: TextStyle(color: Colors.black54),
-              ),
-              const SizedBox(height: 24),
-              const Text('Your name',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _nameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: _authDecoration(
-                    hint: 'What should we call you?',
-                    icon: Icons.person_outline_rounded),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Enter your name.'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              const Text('Email address',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: _authDecoration(
-                    hint: 'you@example.com', icon: Icons.mail_outline_rounded),
-                validator: (value) {
-                  final email = value?.trim() ?? '';
-
-                  if (email.isEmpty ||
-                      !email.contains('@') ||
-                      !email.contains('.')) {
-                    return 'Enter a valid email address.';
-                  }
-
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('Password',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _hidePassword,
-                decoration: _authDecoration(
-                  hint: 'At least 6 characters',
-                  icon: Icons.lock_outline_rounded,
-                ).copyWith(
-                  suffixIcon: IconButton(
-                    onPressed: () =>
-                        setState(() => _hidePassword = !_hidePassword),
-                    icon: Icon(_hidePassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                children: [
+                  // App icon
+                  Center(
+                    child: Container(
+                      width: 58,
+                      height: 58,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE8F0FE),
+                        borderRadius: BorderRadius.circular(18),
+                      ),
+                      child: const Icon(
+                        Icons.spa_outlined,
+                        color: blue,
+                        size: 32,
+                      ),
+                    ),
                   ),
-                ),
-                validator: (value) {
-                  if (value == null || value.length < 6) {
-                    return 'Use at least 6 characters.';
-                  }
 
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('Confirm password',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _confirmController,
-                obscureText: true,
-                decoration: _authDecoration(
-                    hint: 'Type your password again',
-                    icon: Icons.lock_outline_rounded),
-                validator: (value) => value != _passwordController.text
-                    ? 'Passwords do not match.'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                controlAffinity: ListTileControlAffinity.leading,
-                activeColor: rose,
-                value: _agreeToTerms,
-                onChanged: (value) =>
-                    setState(() => _agreeToTerms = value ?? false),
-                title: const Text(
-                  'I agree to the app terms and privacy policy.',
-                  style: TextStyle(fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: 12),
-              FilledButton(
-                onPressed: _register,
-                style: FilledButton.styleFrom(
-                  backgroundColor: rose,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size.fromHeight(52),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Ikuti perkembangan anak anda',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: darkText,
+                      fontSize: 28,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.5,
+                    ),
                   ),
-                ),
-                child: const Text('Create account',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+
+                  const SizedBox(height: 8),
+
+                  const Text(
+                    'Daftar akaun untuk mula menggunakan aplikasi.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: secondaryText,
+                      fontSize: 14,
+                    ),
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Name
+                  _fieldLabel('Nama anda'),
+
+                  TextFormField(
+                    controller: _nameController,
+                    textCapitalization: TextCapitalization.words,
+                    textInputAction: TextInputAction.next,
+                    decoration: _inputDecoration(
+                      hint: 'Apa nama anda?',
+                      icon: Icons.person_outline,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Sila masukkan nama anda.';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Email
+                  _fieldLabel('Emel'),
+
+                  TextFormField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                    decoration: _inputDecoration(
+                      hint: 'anda@gmail.com',
+                      icon: Icons.mail_outline,
+                    ),
+                    validator: (value) {
+                      final email = value?.trim() ?? '';
+
+                      if (email.isEmpty ||
+                          !email.contains('@') ||
+                          !email.contains('.')) {
+                        return 'Sila masukkan alamat emel yang sah.';
+                      }
+
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Password
+                  _fieldLabel('Kata laluan'),
+
+                  TextFormField(
+                    controller: _passwordController,
+                    obscureText: _hidePassword,
+                    textInputAction: TextInputAction.next,
+                    decoration: _inputDecoration(
+                      hint: 'Sekurang-kurangnya 6 aksara',
+                      icon: Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _hidePassword = !_hidePassword;
+                          });
+                        },
+                        icon: Icon(
+                          _hidePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: secondaryText,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
+                        return 'Sila gunakan sekurang-kurangnya 6 aksara.';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Confirm password
+                  _fieldLabel('Sahkan kata laluan'),
+
+                  TextFormField(
+                    controller: _confirmController,
+                    obscureText: _hideConfirmPassword,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _register(),
+                    decoration: _inputDecoration(
+                      hint: 'Taip semula kata laluan anda',
+                      icon: Icons.lock_outline,
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            _hideConfirmPassword =
+                                !_hideConfirmPassword;
+                          });
+                        },
+                        icon: Icon(
+                          _hideConfirmPassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
+                          color: secondaryText,
+                        ),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'Kata laluan tidak sepadan.';
+                      }
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Terms and conditions
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    controlAffinity: ListTileControlAffinity.leading,
+                    activeColor: blue,
+                    value: _agreeToTerms,
+                    onChanged: (value) {
+                      setState(() {
+                        _agreeToTerms = value ?? false;
+                      });
+                    },
+                    title: const Text(
+                      'Saya bersetuju dengan syarat dan dasar privasi aplikasi.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: secondaryText,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Register button
+                  SizedBox(
+                    height: 48,
+                    child: FilledButton(
+                      onPressed: _register,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: blue,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: const Text(
+                        'Buat akaun',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Login link
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text(
+                      'Sudah mempunyai akaun? Log masuk',
+                      style: TextStyle(
+                        color: blue,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    'Mula mengurus tumbesaran anak anda hari ini!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: secondaryText,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Already have an account? Log in',
-                  style: TextStyle(color: rose, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -580,35 +882,15 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-InputDecoration _authDecoration({
-  required String hint,
-  required IconData icon,
-  Color accent = rose,
-}) {
-  return InputDecoration(
-    hintText: hint,
-    prefixIcon: Icon(icon, color: accent),
-    filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
-    border: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide.none,
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: Colors.black.withOpacity(0.05)),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: accent, width: 1.5),
-    ),
-  );
-}
+//NAVBAR
 
 class MainNavigation extends StatefulWidget {
   final String ownerId;
-  const MainNavigation({super.key, required this.ownerId});
+
+  const MainNavigation({
+    super.key,
+    required this.ownerId,
+  });
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
@@ -618,125 +900,522 @@ class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
   int? selectedChildId;
 
+  // Section colors
+  static const Color homeBlue = Color(0xFF2878D0);
+  static const Color growthYellow = Color(0xFFF2C230);
+  static const Color nutritionGreen = Color(0xFF32966A);
+  static const Color recipesRed = Color(0xFFE34D4D);
+  static const Color moreCharcoal = Color(0xFF45464F);
+
+  // Light indicator colors
+  static const Color homeLight = Color(0xFFEAF3FF);
+  static const Color growthLight = Color(0xFFFFF7D6);
+  static const Color nutritionLight = Color(0xFFE5F5EB);
+  static const Color recipesLight = Color(0xFFFDEAEA);
+  static const Color moreLight = Color(0xFFF0F0F3);
+
+  Color get selectedColor {
+    switch (selectedIndex) {
+      case 0:
+        return homeBlue;
+      case 1:
+        return growthYellow;
+      case 2:
+        return nutritionGreen;
+      case 3:
+        return recipesRed;
+      case 4:
+        return moreCharcoal;
+      default:
+        return homeBlue;
+    }
+  }
+
+  Color get selectedIndicatorColor {
+    switch (selectedIndex) {
+      case 0:
+        return homeLight;
+      case 1:
+        return growthLight;
+      case 2:
+        return nutritionLight;
+      case 3:
+        return recipesLight;
+      case 4:
+        return moreLight;
+      default:
+        return homeLight;
+    }
+  }
+
   List<Widget> get pages => [
-    HomePage(ownerId: widget.ownerId, visible: selectedIndex == 0, selectedChildId: selectedChildId,
-      onChildSelected: (id) => setState(() => selectedChildId = id),
-      onNavigate: (index) => setState(() => selectedIndex = index)),
-    GrowthPage(ownerId: widget.ownerId, initialChildId: selectedChildId,
-      visible: selectedIndex == 1,
-      onChildSelected: (id) => setState(() => selectedChildId = id)),
-    const PlaceholderPage(
-      title: 'Nutrition',
-      subtitle: 'Your nutrition information will go here.',
-      icon: Icons.spa_rounded,
-    ),
-    const RecipesPage(),
-    const MorePage(),
-  ];
+        HomePage(
+          ownerId: widget.ownerId,
+          visible: selectedIndex == 0,
+          selectedChildId: selectedChildId,
+          onChildSelected: (id) {
+            setState(() => selectedChildId = id);
+          },
+          onNavigate: (index) {
+            setState(() => selectedIndex = index);
+          },
+        ),
+
+        GrowthPage(
+          ownerId: widget.ownerId,
+          initialChildId: selectedChildId,
+          visible: selectedIndex == 1,
+          onChildSelected: (id) {
+            setState(() => selectedChildId = id);
+          },
+        ),
+
+        const PlaceholderPage(
+          title: 'Nutrition',
+          subtitle: 'Your nutrition information will go here.',
+          icon: Icons.spa_rounded,
+        ),
+
+        const RecipesPage(),
+
+        const MorePage(),
+      ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF8FAFD),
+
       body: IndexedStack(
         index: selectedIndex,
         children: pages,
       ),
-      bottomNavigationBar: NavigationBar(
-        height: 72,
-        backgroundColor: Colors.white,
-        indicatorColor: blush,
-        selectedIndex: selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() => selectedIndex = index);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded),
-            label: 'Home',
+
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          backgroundColor: Colors.white,
+          indicatorColor: selectedIndicatorColor,
+          height: 72,
+          elevation: 0,
+
+          iconTheme: MaterialStateProperty.resolveWith<IconThemeData>(
+            (states) {
+              if (states.contains(MaterialState.selected)) {
+                return IconThemeData(
+                  color: selectedColor,
+                  size: 24,
+                );
+              }
+
+              return const IconThemeData(
+                color: Color(0xFF80868B),
+                size: 23,
+              );
+            },
           ),
-          NavigationDestination(
-            icon: Icon(Icons.show_chart_rounded),
-            selectedIcon: Icon(Icons.trending_up_rounded),
-            label: 'Growth',
+
+          labelTextStyle: MaterialStateProperty.resolveWith<TextStyle>(
+            (states) {
+              if (states.contains(MaterialState.selected)) {
+                return TextStyle(
+                  color: selectedColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                );
+              }
+
+              return const TextStyle(
+                color: Color(0xFF80868B),
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              );
+            },
           ),
-          NavigationDestination(
-            icon: Icon(Icons.spa_outlined),
-            selectedIcon: Icon(Icons.spa_rounded),
-            label: 'Nutrition',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu_book_outlined),
-            selectedIcon: Icon(Icons.menu_book_rounded),
-            label: 'Recipes',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'More',
-          ),
-        ],
+        ),
+
+        child: NavigationBar(
+          selectedIndex: selectedIndex,
+
+          onDestinationSelected: (index) {
+            setState(() {
+              selectedIndex = index;
+            });
+          },
+
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home_rounded),
+              label: 'Utama',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.show_chart_rounded),
+              selectedIcon: Icon(Icons.trending_up_rounded),
+              label: 'Pertumbuhan',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.spa_outlined),
+              selectedIcon: Icon(Icons.spa_rounded),
+              label: 'Nutrisi',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.menu_book_outlined),
+              selectedIcon: Icon(Icons.menu_book_rounded),
+              label: 'Resipi',
+            ),
+
+            NavigationDestination(
+              icon: Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view_rounded),
+              label: 'Tetapan',
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
+//MORE (SETTINGS)
 
 class MorePage extends StatefulWidget {
   const MorePage({super.key});
 
   @override
   State<MorePage> createState() => _MorePageState();
+
 }
+
+
 
 class _MorePageState extends State<MorePage> {
   bool _loggingOut = false;
+
+  static const Color darkText = Color(0xFF24252B);
+  static const Color secondaryText = Color(0xFF70717A);
+  static const Color charcoal = Color(0xFF45464F);
+  static const Color lightGrey = Color(0xFFF0F0F3);
+  static const Color borderGrey = Color(0xFFE5E5EA);
+
+  Future<void> _openWebsite() async {
+  final Uri url = Uri.parse('https://YOUR-WEBSITE.com');
+
+  if (!await launchUrl(
+    url,
+    mode: LaunchMode.externalApplication,
+  )) {
+    debugPrint('Could not open website');
+  }
+}
+
+Future<void> _sendEnquiry() async {
+  final Uri url = Uri.parse('https://YOUR-WEBSITE.com');
+
+  if (!await launchUrl(
+    url,
+    mode: LaunchMode.externalApplication,
+  )) {
+    debugPrint('Could not open website');
+  }
+}
 
   Future<void> _logout() async {
     setState(() => _loggingOut = true);
 
     try {
       await FirebaseAuth.instance.signOut();
-
-      // AuthGate returns the user to the login screen
+      // AuthGate returns the user to the login screen.
     } catch (_) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not log out. Please try again.')),
+        const SnackBar(
+          content: Text('Tidak dapat log keluar. Sila cuba lagi.'),
+        ),
       );
     } finally {
-      if (mounted) setState(() => _loggingOut = false);
+      if (mounted) {
+        setState(() => _loggingOut = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          const Text(
-            'More',
-            style: TextStyle(
-              color: ink,
-              fontSize: 32,
-              fontWeight: FontWeight.w800,
+    final email = FirebaseAuth.instance.currentUser?.email ?? 'No email available';
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(24),
+          children: [
+            // Page heading
+            const Text(
+              'Tetapan',
+              style: TextStyle(
+                color: darkText,
+                fontSize: 30,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 24),
-          const Text('Account', style: TextStyle(fontSize: 18, color: ink)),
-          const SizedBox(height: 8),
-          Text(
-            FirebaseAuth.instance.currentUser?.email ?? '',
-            style: const TextStyle(color: Colors.black54),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: _loggingOut ? null : _logout,
-            icon: const Icon(Icons.logout_rounded),
-            label: Text(_loggingOut ? 'Logging out...' : 'Log out'),
-          ),
-        ],
+
+            const SizedBox(height: 8),
+
+            const Text(
+              'Urus akaun dan tetapan anda.',
+              style: TextStyle(
+                color: secondaryText,
+                fontSize: 14,
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Account section
+            const Text(
+              'AKAUN',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF85858D),
+                letterSpacing: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            // Account information card
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFAFAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: borderGrey),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: lightGrey,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(
+                      Icons.person_outline_rounded,
+                      color: charcoal,
+                      size: 26,
+                    ),
+                  ),
+
+                  const SizedBox(width: 14),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Log masuk sebagai',
+                          style: TextStyle(
+                            color: secondaryText,
+                            fontSize: 12,
+                          ),
+                        ),
+
+                        const SizedBox(height: 5),
+
+                        Text(
+                          email,
+                          style: const TextStyle(
+                            color: darkText,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            SizedBox(
+              height: 50,
+              child: FilledButton.icon(
+                onPressed: _loggingOut ? null : _logout,
+                icon: _loggingOut
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.logout_rounded),
+                label: Text(
+                  _loggingOut ? 'Sedang keluar...' : 'Log Keluar',
+                ),
+                style: FilledButton.styleFrom(
+                  backgroundColor: charcoal,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: charcoal.withOpacity(0.6),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // Settings section
+            const Text(
+              'KEUTAMAAN',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF85858D),
+                letterSpacing: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 14),
+
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: borderGrey),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: ListTile(
+                leading: const Icon(
+                  Icons.info_outline_rounded,
+                  color: secondaryText,
+                ),
+                title: const Text(
+                  'Tentang',
+                  style: TextStyle(
+                    color: darkText,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
+                ),
+                subtitle: const Text(
+                  'Memastikan tumbesaran anak anda sihat dan ibu bapa gembira.',
+                  style: TextStyle(
+                    color: secondaryText,
+                    fontSize: 12,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.chevron_right_rounded,
+                  color: secondaryText,
+                ),
+                onTap: () {
+                  showAboutDialog(
+                    context: context,
+                    applicationName: 'GrowWell',
+                    applicationVersion: '1.0.0',
+                    applicationLegalese:
+                        'Mula mengurus tumbesaran anak anda hari ini!',
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            const Text(
+              'CONTACT US',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF85858D),
+                letterSpacing: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(decoration: BoxDecoration(
+                border: Border.all(color: borderGrey),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(
+                      Icons.language_rounded,
+                      color: Color(0xFF45464F),
+                    ),
+                    title: const Text(
+                      'Laman Web Rasmi',
+                      style: TextStyle(
+                        color: darkText,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Semak maklumat lanjut di laman web rasmi kami.',
+                      style: TextStyle(
+                        color: secondaryText,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _openWebsite,
+                  ),
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  ListTile(
+                    leading: const Icon(
+                      Icons.email_outlined,
+                      color: Color(0xFF45464F),
+                    ),
+                    title: const Text(
+                      'Hantaran Pertanyaan',
+                      style: TextStyle(
+                        color: darkText,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: const Text(
+                      'Hubungi orang yang bertanggungjawab untuk bertanya soalan',
+                      style: TextStyle(
+                        color: secondaryText,
+                        fontSize: 12,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _sendEnquiry,
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 28),
+
+            const Center(
+              child: Text(
+                'Mula mengurus tumbesaran anak anda hari ini!',
+                style: TextStyle(
+                  color: secondaryText,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -744,9 +1423,7 @@ class _MorePageState extends State<MorePage> {
 
 class PlaceholderPage extends StatelessWidget {
   final String title;
-
   final String subtitle;
-
   final IconData icon;
 
   const PlaceholderPage({
@@ -767,8 +1444,12 @@ class PlaceholderPage extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 38,
-                backgroundColor: blush,
-                child: Icon(icon, size: 38, color: rose),
+                backgroundColor: const Color(0xFFE5F5EB),
+                child: Icon(
+                  icon,
+                  size: 38,
+                  color: const Color(0xFF32966A),
+                ),
               ),
               const SizedBox(height: 18),
               Text(
@@ -776,645 +1457,22 @@ class PlaceholderPage extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: ink,
+                  color: Color(0xFF24252B),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 subtitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54, fontSize: 15),
+                style: const TextStyle(
+                  color: Colors.black54,
+                  fontSize: 15,
+                ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class Recipe {
-  final String name;
-
-  final String category;
-
-  final String description;
-
-  final String time;
-
-  final String difficulty;
-
-  final String emoji;
-
-  final Color color;
-
-  final List<String> ingredients;
-
-  final List<String> steps;
-
-  const Recipe({
-    required this.name,
-    required this.category,
-    required this.description,
-    required this.time,
-    required this.difficulty,
-    required this.emoji,
-    required this.color,
-    required this.ingredients,
-    required this.steps,
-  });
-}
-
-const List<Recipe> sampleRecipes = [
-  Recipe(
-    name: 'Berry Yogurt Bowl',
-    category: 'Breakfast',
-    description: 'Creamy yogurt with berries and a little crunch.',
-    time: '10 min',
-    difficulty: 'Easy',
-    emoji: '🫐',
-    color: Color(0xFFE8E5FA),
-    ingredients: [
-      '1 cup plain yogurt',
-      '1/2 cup mixed berries',
-      '2 tablespoons granola',
-      '1 teaspoon honey (optional)',
-    ],
-    steps: [
-      'Spoon the yogurt into a bowl.',
-      'Wash and add the mixed berries.',
-      'Sprinkle granola over the top.',
-      'Drizzle with honey if you like, then enjoy.',
-    ],
-  ),
-  Recipe(
-    name: 'Avocado Toast',
-    category: 'Breakfast',
-    description: 'A simple, satisfying toast with creamy avocado.',
-    time: '10 min',
-    difficulty: 'Easy',
-    emoji: '🥑',
-    color: Color(0xFFE2F0D9),
-    ingredients: [
-      '2 slices wholegrain bread',
-      '1 ripe avocado',
-      'A squeeze of lemon',
-      'Salt and pepper to taste',
-    ],
-    steps: [
-      'Toast the bread until golden.',
-      'Mash the avocado with lemon juice.',
-      'Spread avocado over the toast.',
-      'Season with salt and pepper.',
-    ],
-  ),
-  Recipe(
-    name: 'Rainbow Rice Bowl',
-    category: 'Lunch',
-    description: 'Colourful veggies served with warm rice.',
-    time: '20 min',
-    difficulty: 'Easy',
-    emoji: '🥗',
-    color: Color(0xFFFFE9CF),
-    ingredients: [
-      '1 cup cooked rice',
-      '1/2 cup sliced cucumber',
-      '1/2 cup shredded carrot',
-      '1/2 cup cooked protein of choice',
-      'Your favourite dressing',
-    ],
-    steps: [
-      'Place the warm rice in a bowl.',
-      'Arrange the vegetables and protein on top.',
-      'Add your favourite dressing.',
-      'Mix together before eating.',
-    ],
-  ),
-  Recipe(
-    name: 'Creamy Tomato Pasta',
-    category: 'Dinner',
-    description: 'Comforting pasta with a gentle tomato sauce.',
-    time: '25 min',
-    difficulty: 'Medium',
-    emoji: '🍝',
-    color: Color(0xFFF8DDE0),
-    ingredients: [
-      '150 g pasta',
-      '1 cup chopped tomatoes',
-      '1 small garlic clove, minced',
-      '2 tablespoons cooking cream',
-      'Salt, pepper and herbs',
-    ],
-    steps: [
-      'Cook pasta according to the packet instructions.',
-      'Gently cook garlic and tomatoes in a pan.',
-      'Stir in the cream and season to taste.',
-      'Add the drained pasta and toss to coat.',
-    ],
-  ),
-  Recipe(
-    name: 'Banana Oat Bites',
-    category: 'Snacks',
-    description: 'Little banana and oat bites for snack time.',
-    time: '18 min',
-    difficulty: 'Easy',
-    emoji: '🍌',
-    color: Color(0xFFFFF0C9),
-    ingredients: [
-      '1 ripe banana',
-      '3/4 cup rolled oats',
-      'A pinch of cinnamon',
-      '1 tablespoon chocolate chips (optional)',
-    ],
-    steps: [
-      'Preheat the oven to 180°C.',
-      'Mash the banana in a bowl.',
-      'Mix in oats, cinnamon and optional chocolate chips.',
-      'Shape into small bites and bake for 12–15 minutes.',
-    ],
-  ),
-];
-
-const List<String> categories = [
-  'All',
-  'Breakfast',
-  'Lunch',
-  'Dinner',
-  'Snacks',
-];
-
-class RecipesPage extends StatefulWidget {
-  const RecipesPage({super.key});
-
-  @override
-  State<RecipesPage> createState() => _RecipesPageState();
-}
-
-class _RecipesPageState extends State<RecipesPage> {
-  String selectedCategory = 'All';
-
-  String searchText = '';
-
-  final Set<String> favourites = {};
-
-  @override
-  Widget build(BuildContext context) {
-    final filteredRecipes = sampleRecipes.where((recipe) {
-      final matchesCategory =
-          selectedCategory == 'All' || recipe.category == selectedCategory;
-
-      final query = searchText.toLowerCase().trim();
-
-      final matchesSearch = recipe.name.toLowerCase().contains(query) ||
-          recipe.category.toLowerCase().contains(query) ||
-          recipe.ingredients.any((item) => item.toLowerCase().contains(query));
-
-      return matchesCategory && matchesSearch;
-    }).toList();
-
-    return SafeArea(
-      child: CustomScrollView(
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-            sliver: SliverToBoxAdapter(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(20, 20, 18, 20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF6D4BC3), Color(0xFF4930A0)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text('GROWWELL  ✿',
-                                  style: TextStyle(
-                                      color: Color(0xFFE9E2FF),
-                                      fontSize: 11,
-                                      letterSpacing: 1.6,
-                                      fontWeight: FontWeight.bold)),
-                              SizedBox(height: 7),
-                              Text('Healthy Recipes',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 27,
-                                      fontWeight: FontWeight.w800)),
-                              SizedBox(height: 5),
-                              Text('Little meals, brighter days.',
-                                  style: TextStyle(
-                                      color: Colors.white70, fontSize: 13)),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 54,
-                          height: 54,
-                          decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.16),
-                              borderRadius: BorderRadius.circular(18)),
-                          child: const Icon(Icons.restaurant_menu_rounded,
-                              color: Colors.white, size: 29),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    onChanged: (value) => setState(() => searchText = value),
-                    decoration: InputDecoration(
-                      hintText: 'Search recipes or ingredients...',
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(18),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Find your craving',
-                    style: TextStyle(
-                      color: ink,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: 42,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, index) {
-                        final category = categories[index];
-
-                        final isSelected = category == selectedCategory;
-
-                        return ChoiceChip(
-                          label: Text(category),
-                          selected: isSelected,
-                          showCheckmark: false,
-                          selectedColor: rose,
-                          backgroundColor: Colors.white,
-                          labelStyle: TextStyle(
-                            color: isSelected ? Colors.white : ink,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          side: BorderSide.none,
-                          onSelected: (_) {
-                            setState(() => selectedCategory = category);
-                          },
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Made with love',
-                          style: TextStyle(
-                            color: ink,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        '${filteredRecipes.length} recipes',
-                        style: const TextStyle(color: Colors.black54),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (filteredRecipes.isEmpty)
-            const SliverFillRemaining(
-              hasScrollBody: false,
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(28),
-                  child: Text(
-                    'No recipes found. Try another search 💗',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
-                  ),
-                ),
-              ),
-            )
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final recipe = filteredRecipes[index];
-
-                    return RecipeCard(
-                      recipe: recipe,
-                      isFavourite: favourites.contains(recipe.name),
-                      onFavouriteTap: () {
-                        setState(() {
-                          if (!favourites.add(recipe.name)) {
-                            favourites.remove(recipe.name);
-                          }
-                        });
-                      },
-                    );
-                  },
-                  childCount: filteredRecipes.length,
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class RecipeCard extends StatelessWidget {
-  final Recipe recipe;
-
-  final bool isFavourite;
-
-  final VoidCallback onFavouriteTap;
-
-  const RecipeCard({
-    super.key,
-    required this.recipe,
-    required this.isFavourite,
-    required this.onFavouriteTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      margin: const EdgeInsets.only(bottom: 16),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => RecipeDetailPage(recipe: recipe),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                Container(
-                  height: 145,
-                  width: double.infinity,
-                  color: recipe.color,
-                  alignment: Alignment.center,
-                  child:
-                      Text(recipe.emoji, style: const TextStyle(fontSize: 68)),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Material(
-                    color: Colors.white.withOpacity(0.94),
-                    shape: const CircleBorder(),
-                    child: IconButton(
-                      tooltip: isFavourite
-                          ? 'Remove from favourites'
-                          : 'Add to favourites',
-                      onPressed: onFavouriteTap,
-                      icon: Icon(
-                        isFavourite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavourite ? rose : ink,
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 12,
-                  bottom: 12,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      recipe.category,
-                      style: const TextStyle(
-                        color: rose,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 13, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recipe.name,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: ink,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    recipe.description,
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      const Icon(Icons.schedule_rounded, size: 16, color: rose),
-                      const SizedBox(width: 5),
-                      Text(recipe.time, style: const TextStyle(fontSize: 12)),
-                      const SizedBox(width: 16),
-                      const Icon(Icons.local_fire_department_outlined,
-                          size: 16, color: rose),
-                      const SizedBox(width: 5),
-                      Text(recipe.difficulty,
-                          style: const TextStyle(fontSize: 12)),
-                      const Spacer(),
-                      const Text(
-                        'View recipe  →',
-                        style: TextStyle(
-                          color: rose,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class RecipeDetailPage extends StatelessWidget {
-  final Recipe recipe;
-
-  const RecipeDetailPage({super.key, required this.recipe});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: cream,
-        title: const Text('Recipe details'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-        children: [
-          Container(
-            height: 190,
-            decoration: BoxDecoration(
-              color: recipe.color,
-              borderRadius: BorderRadius.circular(24),
-            ),
-            alignment: Alignment.center,
-            child: Text(recipe.emoji, style: const TextStyle(fontSize: 90)),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            recipe.name,
-            style: const TextStyle(
-              color: ink,
-              fontSize: 27,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(recipe.description,
-              style: const TextStyle(color: Colors.black54, fontSize: 15)),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            children: [
-              _InfoPill(icon: Icons.schedule_rounded, text: recipe.time),
-              _InfoPill(
-                  icon: Icons.signal_cellular_alt_rounded,
-                  text: recipe.difficulty),
-              _InfoPill(icon: Icons.sell_outlined, text: recipe.category),
-            ],
-          ),
-          const SizedBox(height: 26),
-          const Text(
-            'Ingredients',
-            style: TextStyle(
-                color: ink, fontSize: 21, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 10),
-          ...recipe.ingredients.map(
-            (ingredient) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.check_circle_outline, color: rose, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(child: Text(ingredient)),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          const Text(
-            'Let’s make it',
-            style: TextStyle(
-                color: ink, fontSize: 21, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          ...List.generate(recipe.steps.length, (index) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(
-                    radius: 15,
-                    backgroundColor: blush,
-                    child: Text(
-                      '${index + 1}',
-                      style: const TextStyle(
-                          color: rose, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 5),
-                      child: Text(recipe.steps[index]),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: 12),
-          const Text(
-            'Enjoy your meal! ♡',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-                color: rose, fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoPill extends StatelessWidget {
-  final IconData icon;
-
-  final String text;
-
-  const _InfoPill({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      avatar: Icon(icon, size: 16, color: rose),
-      label: Text(text),
-      backgroundColor: Colors.white,
-      side: BorderSide.none,
-      visualDensity: VisualDensity.compact,
     );
   }
 }
