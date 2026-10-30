@@ -6,13 +6,14 @@ import 'database.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'growth_page.dart';
 import 'home_preview.dart';
-import 'recipe.dart';
+import 'recipes_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
   runApp(const GrowWell());
 }
 
@@ -208,7 +209,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 28),
 
                     const Text(
-                      'Anak Sihat, Ibu Ceria',
+                      'Anak Sihat, Anak Hebat',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 27,
@@ -1100,6 +1101,26 @@ class _MorePageState extends State<MorePage> {
   static const Color lightGrey = Color(0xFFF0F0F3);
   static const Color borderGrey = Color(0xFFE5E5EA);
 
+  Future<String> getUserName() async {
+  final user = FirebaseAuth.instance.currentUser;
+
+  if (user == null) return 'User';
+
+  final db = await DatabaseHelper.database;
+
+  final result = await db.query(
+    'profiles',
+    columns: ['name'],
+    where: 'uid = ?',
+    whereArgs: [user.uid],
+    limit: 1,
+  );
+
+  if (result.isEmpty) return 'User';
+
+  return result.first['name'] as String;
+}
+
   Future<void> _openWebsite() async {
   final Uri url = Uri.parse('https://YOUR-WEBSITE.com');
 
@@ -1229,15 +1250,34 @@ Future<void> _sendEnquiry() async {
 
                         const SizedBox(height: 5),
 
-                        Text(
-                          email,
-                          style: const TextStyle(
-                            color: darkText,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                        FutureBuilder<String>(
+                        future: getUserName(),
+                        builder: (context, snapshot) {
+                          final user = FirebaseAuth.instance.currentUser;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                snapshot.data ?? 'Loading...',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                user?.email ?? 'No email available',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      )
                       ],
                     ),
                   ),
