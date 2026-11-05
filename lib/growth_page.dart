@@ -286,7 +286,7 @@ class _GrowthPageState extends State<GrowthPage> {
                                                 fontWeight: FontWeight.w600))
                                         : DropdownButtonFormField<int>(
                                             key: ValueKey(selectedId),
-                                            initialValue: children.any((c) =>
+                                            value: children.any((c) =>
                                                     c['id'] == selectedId)
                                                 ? selectedId
                                                 : null,
