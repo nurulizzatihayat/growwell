@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'database.dart';
 import 'growth_page.dart';
 import 'home_preview.dart';
+import 'monthly_reminder.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -570,6 +571,12 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
   int? selectedChildId;
+
+  @override
+  void initState() {
+    super.initState();
+    GrowthReminders.cancelLegacy();
+  }
 
   List<Widget> get pages => [
     HomePage(ownerId: widget.ownerId, visible: selectedIndex == 0, selectedChildId: selectedChildId,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'child_age.dart';
 import 'growth_repository.dart';
 
 class HomePage extends StatefulWidget {
@@ -179,11 +180,7 @@ class _HomePageState extends State<HomePage> {
   String dateText(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
   String ageText(DateTime birth) {
-    final now = DateTime.now();
-    var months = (now.year - birth.year) * 12 + now.month - birth.month;
-    if (now.day < birth.day) months--;
-    if (months < 0) return 'Age unavailable';
-    return '${months ~/ 12} years ${months % 12} months';
+    return ageInMonths(birth, DateTime.now());
   }
 
   @override

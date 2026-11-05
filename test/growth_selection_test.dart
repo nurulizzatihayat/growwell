@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:growwell/growth_page.dart';
 import 'package:growwell/growth_repository.dart';
-import 'package:growwell/who_height_reference.dart';
 
 class FakeGrowthRepository extends GrowthRepository {
   List<Map<String, Object?>> list = [
@@ -22,14 +22,13 @@ void main() {
   testWidgets('changing to a newly added child waits for the updated list',
       (tester) async {
     final repo = FakeGrowthRepository();
-    final who = (await tester.runAsync(() => WhoHeightReference.load()))!;
+    final who = (await tester.runAsync(() => rootBundle.loadString('assets/who/growth_curves.csv')))!;
     Widget page(int id) => MaterialApp(
         home: Scaffold(
             body: GrowthPage(
                 ownerId: 'a',
                 initialChildId: id,
-                repository: repo,
-                heightReference: Future.value(who))));
+                repository: repo, heightReference: Future.value(who))));
     await tester.pumpWidget(page(1));
     await tester.pumpAndSettle();
     expect(find.text('First'), findsOneWidget);

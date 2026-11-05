@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'growth_repository.dart';
-import 'height_chart.dart';
-import 'who_height_reference.dart';
+import 'child_age.dart';
+import 'growth_reference_chart.dart';
+import 'monthly_progress.dart';
+import 'monthly_reminder.dart';
 
 class GrowthPage extends StatefulWidget {
   final String ownerId;
@@ -9,7 +11,8 @@ class GrowthPage extends StatefulWidget {
   final bool visible;
   final ValueChanged<int>? onChildSelected;
   final GrowthRepository? repository;
-  final Future<WhoHeightReference>? heightReference;
+  final Future<String>? heightReference;
+  final Future<bool> Function(int childId, String date)? scheduleReminder;
   const GrowthPage(
       {super.key,
       required this.ownerId,
@@ -17,7 +20,8 @@ class GrowthPage extends StatefulWidget {
       this.visible = true,
       this.onChildSelected,
       this.repository,
-      this.heightReference});
+      this.heightReference,
+      this.scheduleReminder});
   @override
   State<GrowthPage> createState() => _GrowthPageState();
 }
@@ -29,11 +33,11 @@ class _GrowthPageState extends State<GrowthPage> {
   int? selectedId;
   int? selectedMeasurementId;
   int indicator = 0;
-  bool showProgress = false;
   final ScrollController scrollController = ScrollController();
   bool loading = true;
   String? error;
   int loadRequest = 0;
+  String? reminderKey;
 
   @override
   void initState() {
@@ -86,6 +90,15 @@ class _GrowthPageState extends State<GrowthPage> {
         loading = false;
         error = null;
       });
+      if (widget.visible && id != null && entries.isNotEmpty) {
+        final date = entries.first['date'] as String;
+        final name = list.firstWhere((c) => c['id'] == id)['name'] as String;
+        final key = '$id:$date:$name';
+        if (key != reminderKey) {
+          reminderKey = key;
+          _scheduleReminder(id, name, date);
+        }
+      }
     } catch (_) {
       if (mounted && request == loadRequest)
         setState(() {
@@ -95,11 +108,26 @@ class _GrowthPageState extends State<GrowthPage> {
     }
   }
 
+  Future<void> _scheduleReminder(int childId, String childName, String date) async {
+    if (widget.scheduleReminder == null && !GrowthReminders.supported) return;
+    try {
+      final allowed = widget.scheduleReminder != null
+          ? await widget.scheduleReminder!(childId, date)
+          : await GrowthReminders.schedule(childId: childId, childName: childName, latestDate: date);
+      if (!allowed && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Allow notifications in your phone settings to receive growth reminders.')));
+      }
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Measurement saved. The reminder could not be scheduled.')));
+    }
+  }
+
   Future<void> addMeasurement() async {
     final height = TextEditingController();
     final weight = TextEditingController();
     DateTime date = DateUtils.dateOnly(DateTime.now());
-    String method = 'standing';
     final child = children.firstWhere((c) => c['id'] == selectedId);
     final birth = DateTime.parse(child['birth'] as String);
     final route = DialogRoute<bool>(
@@ -132,17 +160,6 @@ class _GrowthPageState extends State<GrowthPage> {
                             decimal: true),
                         decoration:
                             const InputDecoration(labelText: 'Weight (kg)')),
-                    DropdownButtonFormField<String>(
-                        initialValue: method,
-                        decoration:
-                            const InputDecoration(labelText: 'Measured'),
-                        items: const [
-                          DropdownMenuItem(
-                              value: 'standing', child: Text('Standing')),
-                          DropdownMenuItem(
-                              value: 'lying', child: Text('Lying down'))
-                        ],
-                        onChanged: (v) => update(() => method = v!)),
                   ])),
                   actions: [
                     TextButton(
@@ -180,7 +197,7 @@ class _GrowthPageState extends State<GrowthPage> {
             dateText(date),
             double.parse(height.text),
             double.parse(weight.text),
-            method);
+            'unknown');
         await load();
       } catch (_) {
         showError();
@@ -200,7 +217,7 @@ class _GrowthPageState extends State<GrowthPage> {
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   static const green = Color(0xFF1DA270);
-  static const labels = ['Height-for-Age', 'BMI-for-Age'];
+  static const labels = ['Height-for-Age', 'Weight-for-Age', 'BMI-for-Age'];
 
   @override
   Widget build(BuildContext context) {
@@ -213,19 +230,13 @@ class _GrowthPageState extends State<GrowthPage> {
         child: Column(children: [
           Container(
             width: double.infinity,
-            color: showProgress ? const Color(0xFF51409B) : green,
+            color: green,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Row(children: [
-              if (showProgress)
-                IconButton(
-                    tooltip: 'Back to growth chart',
-                    onPressed: () => setState(() => showProgress = false),
-                    icon: const Icon(Icons.arrow_back, color: Colors.white))
-              else
-                const Icon(Icons.show_chart, color: Colors.white),
+              const Icon(Icons.show_chart, color: Colors.white),
               const SizedBox(width: 16),
               Expanded(
-                  child: Text(showProgress ? 'Growth Progress' : 'Growth Chart',
+                  child: Text('Growth Chart',
                       style: TextStyle(
                           color: Colors.white,
                           fontSize: 21,
@@ -239,7 +250,7 @@ class _GrowthPageState extends State<GrowthPage> {
                     builder: (context) => AlertDialog(
                           title: const Text('About growth charts'),
                           content: const Text(
-                              'Height-for-age uses WHO reference values. The result is a screening aid, not a diagnosis. Discuss concerns with a healthcare professional.'),
+                              'Growth charts use WHO reference data. Measurements can be recorded and viewed below.'),
                           actions: [
                             TextButton(
                                 onPressed: () => Navigator.pop(context),
@@ -303,7 +314,6 @@ class _GrowthPageState extends State<GrowthPage> {
                                           )),
                               ]),
                               const SizedBox(height: 14),
-                              if (!showProgress)
                                 SingleChildScrollView(
                                     scrollDirection: Axis.horizontal,
                                     child: Row(
@@ -329,40 +339,13 @@ class _GrowthPageState extends State<GrowthPage> {
                                               )),
                                     )),
                               const SizedBox(height: 12),
-                              if (indicator == 0)
-                                HeightChart(
+                              GrowthReferenceChart(
                                     child: child,
-                                    records: records,
-                                    selectedRecord: records
-                                        .where((record) =>
-                                            record['id'] ==
-                                            selectedMeasurementId)
-                                        .firstOrNull,
-                                    progress: showProgress,
-                                    reference: widget.heightReference)
-                              else
-                                const Card(
-                                    child: Padding(
-                                        padding: EdgeInsets.all(20),
-                                        child: Text(
-                                            'BMI-for-age chart and interpretation are not available yet.'))),
-                              if (!showProgress &&
-                                  indicator == 0 &&
-                                  child != null)
-                                Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12),
-                                    child: FilledButton.icon(
-                                        onPressed: () {
-                                          setState(() => showProgress = true);
-                                          scrollController.animateTo(0,
-                                              duration: const Duration(
-                                                  milliseconds: 300),
-                                              curve: Curves.easeOut);
-                                        },
-                                        icon: const Icon(Icons.timeline),
-                                        label: const Text(
-                                            'View Growth Progress'))),
+                                    reference: widget.heightReference,
+                                    indicator: ['height', 'weight', 'bmi'][indicator],
+                                    record: records.where((r) => r['id'] == selectedMeasurementId).firstOrNull),
+                              const SizedBox(height: 16),
+                              if (child != null) MonthlyProgress(child: child, records: records),
                               const SizedBox(height: 16),
                               Row(children: [
                                 const Expanded(
@@ -389,16 +372,13 @@ class _GrowthPageState extends State<GrowthPage> {
                                     color: Colors.white,
                                     elevation: 0,
                                     child: ListTile(
-                                      selected:
-                                          r['id'] == selectedMeasurementId &&
-                                              !showProgress,
+                                      selected: r['id'] == selectedMeasurementId,
                                       selectedTileColor:
                                           const Color(0xFFE3F5EB),
                                       onTap: () {
                                         setState(() {
                                           selectedMeasurementId =
                                               r['id'] as int;
-                                          showProgress = false;
                                           indicator = 0;
                                         });
                                         scrollController.animateTo(0,
@@ -408,7 +388,7 @@ class _GrowthPageState extends State<GrowthPage> {
                                       },
                                       title: Text(r['date'] as String),
                                       subtitle: Text(
-                                          'Age: ${measurementAge(DateTime.parse(child!['birth'] as String), DateTime.parse(r['date'] as String))}  •  ${r['height']} cm  •  ${r['weight']} kg'),
+                                          'Age: ${ageInMonths(DateTime.parse(child!['birth'] as String), DateTime.parse(r['date'] as String))}  •  ${r['height']} cm  •  ${r['weight']} kg'),
                                       trailing: const Icon(Icons.chevron_right),
                                     ))),
                             ])),
