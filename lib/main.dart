@@ -6,6 +6,7 @@ import 'database.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'growth_page.dart';
 import 'home_preview.dart';
+import 'monthly_reminder.dart';
 import 'recipes_page.dart';
 
 void main() async {
@@ -900,6 +901,12 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int selectedIndex = 0;
   int? selectedChildId;
+
+  @override
+  void initState() {
+    super.initState();
+    GrowthReminders.cancelLegacy();
+  }
 
   // Section colors
   static const Color homeBlue = Color(0xFF2878D0);
