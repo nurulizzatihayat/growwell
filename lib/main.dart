@@ -978,10 +978,7 @@ class _MainNavigationState extends State<MainNavigation> {
           },
         ),
 
-        const PlaceholderPage(
-          title: 'Nutrition',
-          subtitle: 'Your nutrition information will go here.',
-          icon: Icons.spa_rounded,
+        const MealPlanPage(
         ),
 
         const RecipesPage(),
