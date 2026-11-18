@@ -1,360 +1,367 @@
-import 'dart:convert';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'recipe.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DatabaseHelper {
-  static Database? _database;
+  // Connect to Cloud Firestore
+  static final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // Database version 3 adds the recipes table.
-  static Future<Database> get database async {
-    if (_database != null) return _database!;
+  // Collection name
+  static const String _collection = 'users';
 
-    final path = join(
-      await getDatabasesPath(),
-      'growwell.db',
-    );
-
-    _database = await openDatabase(
-      path,
-      version: 3,
-      onConfigure: (db) async {
-        await db.execute('PRAGMA foreign_keys = ON');
-      },
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE profiles (
-            uid TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL
-          )
-        ''');
-
-        await _createGrowthTables(db);
-        await _createRecipesTable(db);
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          await _createGrowthTables(db);
-        }
-
-        if (oldVersion < 3) {
-          await _createRecipesTable(db);
-        }
-      },
-    );
-
-    return _database!;
-  }
-
-  // ==========================================
-  // GROWTH TABLES
-  // ==========================================
-
-  static Future<void> _createGrowthTables(Database db) async {
-    await db.execute(
-        'CREATE TABLE growth_children (id INTEGER PRIMARY KEY AUTOINCREMENT, owner TEXT NOT NULL, name TEXT NOT NULL, birth TEXT NOT NULL, sex TEXT NOT NULL)');
-    await db.execute(
-        'CREATE TABLE growth_measurements (id INTEGER PRIMARY KEY AUTOINCREMENT, child_id INTEGER NOT NULL, date TEXT NOT NULL, height REAL NOT NULL, weight REAL NOT NULL, method TEXT NOT NULL, FOREIGN KEY (child_id) REFERENCES growth_children(id))');
-  }
-
-  // ==========================================
-  // RECIPES TABLE
-  // ==========================================
-
-  static Future<void> _createRecipesTable(Database db) async {
-    await db.execute('''
-      CREATE TABLE recipes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        image TEXT,
-        time TEXT NOT NULL,
-        difficulty TEXT NOT NULL,
-        description TEXT NOT NULL,
-        ingredients TEXT NOT NULL,
-        steps TEXT NOT NULL
-      )
-    ''');
-  }
-
-  // Add a recipe
-  static Future<int> insertRecipe(Map<String, Object?> recipe) async {
-    final db = await database;
-
-    final data = Map<String, Object?>.from(recipe);
-    data.remove('id');
-
-    return await db.insert(
-      'recipes',
-      data,
-      conflictAlgorithm: ConflictAlgorithm.abort,
-    );
-  }
-
-  // Retrieve all recipes
-  static Future<List<Map<String, Object?>>> getRecipes() async {
-    final db = await database;
-
-    final result = await db.query(
-      'recipes',
-      orderBy: 'name ASC',
-    );
-
-    return result;
-  }
-
-  // Retrieve one recipe
-  static Future<Map<String, Object?>?> getRecipeById(int id) async {
-    final db = await database;
-
-    final result = await db.query(
-      'recipes',
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-
-    if (result.isEmpty) return null;
-
-    return result.first;
-  }
-
-  // Update a recipe
-  static Future<int> updateRecipe(int id, Map<String, Object?> recipe) async {
-    final db = await database;
-
-    final data = Map<String, Object?>.from(recipe);
-    data.remove('id');
-
-    return await db.update(
-      'recipes',
-      data,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  // Delete a recipe
-  static Future<int> deleteRecipe(int id) async {
-    final db = await database;
-
-    return await db.delete(
-      'recipes',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
-
-  
-  // ==========================================
-  // DUMMY RECIPE DATA FOR TESTING
-  // ==========================================
-
-  static Future<void> seedDummyRecipes() async {
-    final db = await database;
-
-    // Do not insert duplicates if recipes already exist.
-    final count = Sqflite.firstIntValue(
-      await db.rawQuery('SELECT COUNT(*) FROM recipes'),
-    );
-
-    if (count != null && count > 0) return;
-
-    final dummyRecipes = [
-      Recipe(
-        name: 'Banana Pancakes',
-        category: 'Breakfast',
-        image: null,
-        time: '15 minutes',
-        difficulty: 'Easy',
-        description:
-            'Fluffy banana pancakes made with simple ingredients. '
-            'A delicious breakfast for the whole family.',
-        ingredients: [
-          '1 ripe banana',
-          '1 egg',
-          '1/2 cup all-purpose flour',
-          '1/4 cup milk',
-          '1/2 teaspoon baking powder',
-          '1 teaspoon cooking oil',
-        ],
-        steps: [
-          'Mash the banana in a bowl until smooth.',
-          'Add the egg and milk, then mix well.',
-          'Add flour and baking powder. Stir until combined.',
-          'Heat a lightly oiled pan over medium heat.',
-          'Pour a small amount of batter into the pan.',
-          'Cook until bubbles appear, then flip and cook the other side.',
-          'Serve warm.',
-        ],
-      ),
-
-      Recipe(
-        name: 'Chicken Vegetable Soup',
-        category: 'Lunch',
-        image: null,
-        time: '30 minutes',
-        difficulty: 'Easy',
-        description:
-            'A comforting chicken soup with fresh vegetables '
-            'and a light, flavourful broth.',
-        ingredients: [
-          '150g chicken breast',
-          '1 carrot, sliced',
-          '1 potato, cubed',
-          '1/2 cup cabbage',
-          '2 cloves garlic',
-          '500ml water or chicken stock',
-          'Salt and pepper to taste',
-        ],
-        steps: [
-          'Cut the chicken into small pieces.',
-          'Heat a pot and lightly sauté the garlic.',
-          'Add the chicken and cook until lightly browned.',
-          'Pour in the water or chicken stock.',
-          'Add carrots and potatoes.',
-          'Simmer for 15 minutes.',
-          'Add cabbage and cook until tender.',
-          'Season and serve warm.',
-        ],
-      ),
-
-      Recipe(
-        name: 'Vegetable Fried Rice',
-        category: 'Lunch',
-        image: null,
-        time: '20 minutes',
-        difficulty: 'Easy',
-        description:
-            'A quick homemade fried rice with colourful vegetables. '
-            'Perfect for using leftover rice.',
-        ingredients: [
-          '1 cup cooked rice',
-          '1 egg',
-          '1/4 cup diced carrots',
-          '1/4 cup peas',
-          '2 cloves garlic, minced',
-          '1 tablespoon cooking oil',
-          '1 tablespoon soy sauce',
-        ],
-        steps: [
-          'Heat oil in a frying pan.',
-          'Add garlic and sauté until fragrant.',
-          'Add the egg and scramble.',
-          'Add carrots and peas.',
-          'Add cooked rice and stir well.',
-          'Pour in soy sauce and mix evenly.',
-          'Cook for another few minutes and serve.',
-        ],
-      ),
-
-      Recipe(
-        name: 'Steamed Fish with Ginger',
-        category: 'Dinner',
-        image: null,
-        time: '25 minutes',
-        difficulty: 'Medium',
-        description:
-            'A simple steamed fish dish with fresh ginger '
-            'and light seasoning.',
-        ingredients: [
-          '1 medium fish fillet',
-          '1 tablespoon sliced ginger',
-          '1 spring onion',
-          '1 tablespoon soy sauce',
-          '1 teaspoon sesame oil',
-          'A little water',
-        ],
-        steps: [
-          'Clean and prepare the fish fillet.',
-          'Place the fish on a heatproof plate.',
-          'Arrange ginger slices over the fish.',
-          'Prepare a steamer with boiling water.',
-          'Steam the fish for 10 to 15 minutes, or until fully cooked.',
-          'Add soy sauce and sesame oil.',
-          'Garnish with spring onion and serve.',
-        ],
-      ),
-
-      Recipe(
-        name: 'Fresh Fruit Yogurt Bowl',
-        category: 'Snacks',
-        image: null,
-        time: '10 minutes',
-        difficulty: 'Easy',
-        description:
-            'A refreshing snack made with creamy yogurt '
-            'and a variety of fresh fruits.',
-        ingredients: [
-          '1 cup plain yogurt',
-          '1/2 banana, sliced',
-          '1/4 cup strawberries',
-          '1/4 cup diced mango',
-          '1 tablespoon rolled oats',
-        ],
-        steps: [
-          'Place yogurt into a serving bowl.',
-          'Wash and prepare the fruits.',
-          'Arrange banana, strawberries and mango over the yogurt.',
-          'Sprinkle rolled oats on top.',
-          'Serve immediately.',
-        ],
-      ),
-
-      Recipe(
-        name: 'Baked Sweet Potato',
-        category: 'Snacks',
-        image: null,
-        time: '40 minutes',
-        difficulty: 'Easy',
-        description:
-            'Naturally sweet and tender baked sweet potato. '
-            'A simple snack with minimal preparation.',
-        ingredients: [
-          '1 medium sweet potato',
-          '1 teaspoon olive oil',
-          'A pinch of cinnamon (optional)',
-        ],
-        steps: [
-          'Preheat the oven to 200°C.',
-          'Wash and dry the sweet potato.',
-          'Prick the skin several times with a fork.',
-          'Rub lightly with olive oil.',
-          'Bake for 35 to 40 minutes, or until tender.',
-          'Allow to cool slightly before serving.',
-        ],
-      ),
-    ];
-
-    for (final recipe in dummyRecipes) {
-      final data = recipe.toMap();
-      data.remove('id');
-
-      await db.insert('recipes', data);
-    }
-  }
-
-
-  // ==========================================
-  // USER PROFILE
-  // ==========================================
-
+  // SAVE USER PROFILE
   static Future<void> saveProfile({
     required String uid,
     required String name,
     required String email,
   }) async {
-    final db = await database;
-
-    await db.insert(
-      'profiles',
-      {
+    try {
+      await _db.collection(_collection).doc(uid).set({
         'uid': uid,
         'name': name,
         'email': email,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to save user profile: $e');
+    }
+  }
+
+  // GET USER PROFILE
+  static Future<Map<String, dynamic>?> getProfile(String uid) async {
+    try {
+      final doc = await _db.collection(_collection).doc(uid).get();
+
+      if (doc.exists) {
+        return doc.data();
+      }
+
+      return null;
+    } catch (e) {
+      throw Exception('Failed to retrieve user profile: $e');
+    }
+  }
+
+  // UPDATE USER PROFILE
+  static Future<void> updateProfile({
+    required String uid,
+    required String name,
+    required String email,
+  }) async {
+    try {
+      await _db.collection(_collection).doc(uid).update({
+        'name': name,
+        'email': email,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update user profile: $e');
+    }
+  }
+
+  // DELETE USER PROFILE
+  static Future<void> deleteProfile(String uid) async {
+    try {
+      await _db.collection(_collection).doc(uid).delete();
+    } catch (e) {
+      throw Exception('Failed to delete user profile: $e');
+    }
+  }
+
+  // Get the user's growth_children collection.
+  static CollectionReference<Map<String, dynamic>> _childrenCollection(
+    String uid,
+  ) {
+    return _db.collection('users').doc(uid).collection('growth_children');
+  }
+
+  // ==========================================
+  // CHILD FUNCTIONS
+  // ==========================================
+
+  // Add a child.
+  static Future<String> addChild({
+    required String uid,
+    required String name,
+    required String birth,
+    required String sex,
+  }) async {
+    final doc = await _childrenCollection(uid).add({
+      'name': name,
+      'birth': birth,
+      'sex': sex,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+
+    return doc.id;
+  }
+
+  // Get all children belonging to a user.
+  static Future<List<Map<String, dynamic>>> getChildren(String uid) async {
+    final snapshot = await _childrenCollection(uid).get();
+
+    return snapshot.docs.map((doc) {
+      return {'id': doc.id, ...doc.data()};
+    }).toList();
+  }
+
+  // Update a child's information.
+  static Future<void> updateChild({
+    required String uid,
+    required String childId,
+    required String name,
+    required String birth,
+    required String sex,
+  }) async {
+    await _childrenCollection(uid)
+        .doc(childId)
+        .update({'name': name, 'birth': birth, 'sex': sex});
+  }
+
+  // Delete a child and their measurement records.
+  static Future<void> deleteChild({
+    required String uid,
+    required String childId,
+  }) async {
+    final childRef = _childrenCollection(uid).doc(childId);
+
+    final measurements = await childRef.collection('growth_measurements').get();
+
+    final batch = _db.batch();
+
+    for (final doc in measurements.docs) {
+      batch.delete(doc.reference);
+    }
+
+    batch.delete(childRef);
+
+    await batch.commit();
+  }
+
+  // ==========================================
+  // MEASUREMENT FUNCTIONS
+  // ==========================================
+
+  // Add a growth measurement.
+  static Future<String> addMeasurement({
+    required String uid,
+    required String childId,
+    required String date,
+    required double height,
+    required double weight,
+    required String method,
+  }) async {
+    final doc = await _childrenCollection(uid)
+        .doc(childId)
+        .collection('growth_measurements')
+        .add({
+          'date': date,
+          'height': height,
+          'weight': weight,
+          'method': method,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+    return doc.id;
+  }
+
+  // Get all measurements for a child.
+  static Future<List<Map<String, dynamic>>> getMeasurements({
+    required String uid,
+    required String childId,
+  }) async {
+    final snapshot = await _childrenCollection(uid)
+        .doc(childId)
+        .collection('growth_measurements')
+        .orderBy('date', descending: true)
+        .get();
+
+    return snapshot.docs.map((doc) {
+      return {'id': doc.id, ...doc.data()};
+    }).toList();
+  }
+
+  // Update a measurement.
+  static Future<void> updateMeasurement({
+    required String uid,
+    required String childId,
+    required String measurementId,
+    required String date,
+    required double height,
+    required double weight,
+    required String method,
+  }) async {
+    await _childrenCollection(uid)
+        .doc(childId)
+        .collection('growth_measurements')
+        .doc(measurementId)
+        .update({
+          'date': date,
+          'height': height,
+          'weight': weight,
+          'method': method,
+        });
+  }
+
+  // Delete a measurement.
+  static Future<void> deleteMeasurement({
+    required String uid,
+    required String childId,
+    required String measurementId,
+  }) async {
+    await _childrenCollection(uid)
+        .doc(childId)
+        .collection('growth_measurements')
+        .doc(measurementId)
+        .delete();
+  }
+}
+
+class GrowthRepository {
+  GrowthRepository();
+
+  // Convert Firestore data into the format expected by growth.dart.
+  Map<String, Object?> _convert(Map<String, dynamic> data) {
+    return data.map((key, value) {
+      if (value is Timestamp) {
+        return MapEntry(key, value.millisecondsSinceEpoch);
+      }
+
+      return MapEntry(key, value);
+    });
+  }
+
+  // Get all children belonging to the signed-in user.
+  Future<List<Map<String, Object?>>> children(String ownerId) async {
+    final result = await DatabaseHelper.getChildren(ownerId);
+
+    return result.map(_convert).toList();
+  }
+
+  // Get all measurements belonging to a selected child.
+  Future<List<Map<String, Object?>>> measurements(
+    String ownerId,
+    String childId,
+  ) async {
+    final result = await DatabaseHelper.getMeasurements(
+      uid: ownerId,
+      childId: childId,
     );
+
+    final measurements = result.map(_convert).toList();
+
+    // Newest measurement first.
+    measurements.sort((a, b) {
+      final dateA = a['date'] as String;
+      final dateB = b['date'] as String;
+
+      final dateComparison = dateB.compareTo(dateA);
+
+      if (dateComparison != 0) {
+        return dateComparison;
+      }
+
+      final createdA = (a['createdAt'] as num?) ?? 0;
+      final createdB = (b['createdAt'] as num?) ?? 0;
+
+      return createdB.compareTo(createdA);
+    });
+
+    return measurements;
+  }
+
+  // Add a child.
+  Future<String> addChild(
+    String ownerId,
+    String name,
+    String birth,
+    String sex,
+  ) {
+    return DatabaseHelper.addChild(
+      uid: ownerId,
+      name: name,
+      birth: birth,
+      sex: sex,
+    );
+  }
+
+  // Update a child's information.
+  Future<void> updateChild(
+    String ownerId,
+    String childId,
+    String name,
+    String birth,
+    String sex,
+  ) {
+    return DatabaseHelper.updateChild(
+      uid: ownerId,
+      childId: childId,
+      name: name,
+      birth: birth,
+      sex: sex,
+    );
+  }
+
+  // Delete a child and their measurements.
+  Future<void> deleteChild(String ownerId, String childId) {
+    return DatabaseHelper.deleteChild(uid: ownerId, childId: childId);
+  }
+
+  // Add a growth measurement.
+  Future<String> addMeasurement(
+    String ownerId,
+    String childId,
+    String date,
+    double height,
+    double weight,
+    String method,
+  ) {
+    return DatabaseHelper.addMeasurement(
+      uid: ownerId,
+      childId: childId,
+      date: date,
+      height: height,
+      weight: weight,
+      method: method,
+    );
+  }
+
+  // Update a growth measurement.
+  Future<void> updateMeasurement({
+    required String ownerId,
+    required String childId,
+    required String measurementId,
+    required String date,
+    required double height,
+    required double weight,
+    required String method,
+  }) {
+    return DatabaseHelper.updateMeasurement(
+      uid: ownerId,
+      childId: childId,
+      measurementId: measurementId,
+      date: date,
+      height: height,
+      weight: weight,
+      method: method,
+    );
+  }
+
+  // Delete a growth measurement.
+  Future<void> deleteMeasurement({
+    required String ownerId,
+    required String childId,
+    required String measurementId,
+  }) {
+    return DatabaseHelper.deleteMeasurement(
+      uid: ownerId,
+      childId: childId,
+      measurementId: measurementId,
+    );
+  }
+
+  // Get the user's profile name if needed.
+  Future<String?> profileName(String ownerId) async {
+    final profile = await DatabaseHelper.getProfile(ownerId);
+    return profile?['name'] as String?;
   }
 }

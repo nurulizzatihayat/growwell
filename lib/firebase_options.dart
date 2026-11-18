@@ -41,53 +41,48 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDSzQoeESb87Y5X1WWtFvGtPiCwj-5jI6Q',
-    appId: '1:273895683139:web:8dfbb93cd8b5af14d750f6',
-    messagingSenderId: '273895683139',
-    projectId: 'grow-well-fc68f',
-    authDomain: 'grow-well-fc68f.firebaseapp.com',
-    databaseURL: 'https://grow-well-fc68f-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'grow-well-fc68f.firebasestorage.app',
-    measurementId: 'G-N4742PVSQT',
+    apiKey: 'AIzaSyC-p58l-XrGjcV6CP4YL6GgUPfW9K7NJlM',
+    appId: '1:280874371162:web:d0f8620428093db1f13063',
+    messagingSenderId: '280874371162',
+    projectId: 'si-cilik',
+    authDomain: 'si-cilik.firebaseapp.com',
+    storageBucket: 'si-cilik.firebasestorage.app',
+    measurementId: 'G-87DPGH69J1',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA4DUvBgd7pGWhDqGoUkyDNrOAQ6MRisX4',
-    appId: '1:273895683139:android:ee048c7e2c2895f8d750f6',
-    messagingSenderId: '273895683139',
-    projectId: 'grow-well-fc68f',
-    databaseURL: 'https://grow-well-fc68f-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'grow-well-fc68f.firebasestorage.app',
+    apiKey: 'AIzaSyBoVui89Z90Ms6G79P-OlIMwbyjG8oFWLo',
+    appId: '1:280874371162:android:54b012b1602c177ef13063',
+    messagingSenderId: '280874371162',
+    projectId: 'si-cilik',
+    storageBucket: 'si-cilik.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyD7QqSzAMjgKlUmaPvuDNgPHAm1StlcpjQ',
-    appId: '1:273895683139:ios:87513fd080113176d750f6',
-    messagingSenderId: '273895683139',
-    projectId: 'grow-well-fc68f',
-    databaseURL: 'https://grow-well-fc68f-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'grow-well-fc68f.firebasestorage.app',
-    iosBundleId: 'com.example.growwell',
+    apiKey: 'AIzaSyAB3youZXsC-7SqtrS9oNxbkZdbG3EWveQ',
+    appId: '1:280874371162:ios:f5cda1f77a179fb6f13063',
+    messagingSenderId: '280874371162',
+    projectId: 'si-cilik',
+    storageBucket: 'si-cilik.firebasestorage.app',
+    iosBundleId: 'com.example.sicilik',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyD7QqSzAMjgKlUmaPvuDNgPHAm1StlcpjQ',
-    appId: '1:273895683139:ios:87513fd080113176d750f6',
-    messagingSenderId: '273895683139',
-    projectId: 'grow-well-fc68f',
-    databaseURL: 'https://grow-well-fc68f-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'grow-well-fc68f.firebasestorage.app',
-    iosBundleId: 'com.example.growwell',
+    apiKey: 'AIzaSyAB3youZXsC-7SqtrS9oNxbkZdbG3EWveQ',
+    appId: '1:280874371162:ios:f5cda1f77a179fb6f13063',
+    messagingSenderId: '280874371162',
+    projectId: 'si-cilik',
+    storageBucket: 'si-cilik.firebasestorage.app',
+    iosBundleId: 'com.example.sicilik',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDSzQoeESb87Y5X1WWtFvGtPiCwj-5jI6Q',
-    appId: '1:273895683139:web:cf207a409ca9069cd750f6',
-    messagingSenderId: '273895683139',
-    projectId: 'grow-well-fc68f',
-    authDomain: 'grow-well-fc68f.firebaseapp.com',
-    databaseURL: 'https://grow-well-fc68f-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'grow-well-fc68f.firebasestorage.app',
-    measurementId: 'G-TKSB7BFLP5',
+    apiKey: 'AIzaSyC-p58l-XrGjcV6CP4YL6GgUPfW9K7NJlM',
+    appId: '1:280874371162:web:c73122f754974c3bf13063',
+    messagingSenderId: '280874371162',
+    projectId: 'si-cilik',
+    authDomain: 'si-cilik.firebaseapp.com',
+    storageBucket: 'si-cilik.firebasestorage.app',
+    measurementId: 'G-6JGS6WE4QE',
   );
 }

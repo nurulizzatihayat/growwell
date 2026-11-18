@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-// ===========================================================================
-// Personalised Meal Plan (shown on the "Nutrition" tab)
-// ===========================================================================
-
 const Color mealOrange = Color(0xFFF39C12);
 const Color mealAmber = Color(0xFFFFB41F);
 const Color mealPanel = Color(0xFFF4F6FB);
@@ -111,12 +107,28 @@ const List<MealItem> mealPlanItems = [
 ];
 
 const List<String> _mealWeekdays = [
-  'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun',
+  'Mon',
+  'Tue',
+  'Wed',
+  'Thu',
+  'Fri',
+  'Sat',
+  'Sun',
 ];
 
 const List<String> _mealMonths = [
-  'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-  'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
 ];
 
 String _mealDateLabel(DateTime d) =>
@@ -192,8 +204,9 @@ class _MealPlanPageState extends State<MealPlanPage> {
             _buildHeader(),
             Expanded(
               child: ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(28)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(28),
+                ),
                 child: Container(
                   color: mealPanel,
                   child: Column(
@@ -212,55 +225,55 @@ class _MealPlanPageState extends State<MealPlanPage> {
   }
 
   Widget _buildHeader() {
-    return SafeArea(
-      bottom: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 10, 8, 18),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 48,
-              child: IconButton(
-                tooltip: 'Back',
-                onPressed: widget.onBack,
-                icon: const Icon(Icons.arrow_back_rounded,
-                    color: Colors.white, size: 26),
-              ),
-            ),
-            const Expanded(
-              child: Text(
-                'Personalised Meal Plan',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 48,
-              child: Center(
-                child: Material(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(10),
-                    onTap: _pickDate,
-                    child: const SizedBox(
-                      width: 36,
-                      height: 36,
-                      child: Icon(Icons.calendar_month_rounded,
-                          color: mealOrange, size: 22),
-                    ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.dinner_dining_rounded, color: mealOrange),
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Pelan Makanan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                Text(
+                  'Pelan khas untuk anak anda',
+                  style: TextStyle(color: Colors.white, fontSize: 13),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            constraints: const BoxConstraints(),
+            padding: EdgeInsets.zero,
+            tooltip: 'Pick date',
+            onPressed: _pickDate,
+            icon: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.calendar_month_rounded,
+                color: mealOrange,
+                size: 22,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -284,20 +297,28 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   tooltip: 'Previous day',
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _shiftDay(-1),
-                  icon: const Icon(Icons.chevron_left_rounded,
-                      color: mealText, size: 28),
+                  icon: const Icon(
+                    Icons.chevron_left_rounded,
+                    color: mealText,
+                    size: 28,
+                  ),
                 ),
                 InkWell(
                   borderRadius: BorderRadius.circular(12),
                   onTap: _pickDate,
                   child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.calendar_today_outlined,
-                            size: 18, color: mealText),
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          size: 18,
+                          color: mealText,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           _mealDateLabel(_date),
@@ -315,8 +336,11 @@ class _MealPlanPageState extends State<MealPlanPage> {
                   tooltip: 'Next day',
                   visualDensity: VisualDensity.compact,
                   onPressed: () => _shiftDay(1),
-                  icon: const Icon(Icons.chevron_right_rounded,
-                      color: mealText, size: 28),
+                  icon: const Icon(
+                    Icons.chevron_right_rounded,
+                    color: mealText,
+                    size: 28,
+                  ),
                 ),
               ],
             ),
@@ -376,9 +400,7 @@ class _MealPlanPageState extends State<MealPlanPage> {
       default:
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-          children: [
-            for (final meal in mealPlanItems) MealCard(meal: meal),
-          ],
+          children: [for (final meal in mealPlanItems) MealCard(meal: meal)],
         );
     }
   }
@@ -388,14 +410,30 @@ class _MealPlanPageState extends State<MealPlanPage> {
         mealPlanItems.fold<double>(0, (total, m) => total + pick(m));
 
     final stats = <_NutrientStat>[
-      _NutrientStat('Energy', _mealNum(sum((m) => m.energy)), 'kcal',
-          Icons.local_fire_department_rounded),
-      _NutrientStat('Protein', _mealNum(sum((m) => m.protein)), 'g',
-          Icons.egg_alt_rounded),
-      _NutrientStat('Calcium', _mealNum(sum((m) => m.calcium)), 'mg',
-          Icons.water_drop_rounded),
-      _NutrientStat('Iron', _mealNum(sum((m) => m.iron)), 'mg',
-          Icons.bloodtype_rounded),
+      _NutrientStat(
+        'Energy',
+        _mealNum(sum((m) => m.energy)),
+        'kcal',
+        Icons.local_fire_department_rounded,
+      ),
+      _NutrientStat(
+        'Protein',
+        _mealNum(sum((m) => m.protein)),
+        'g',
+        Icons.egg_alt_rounded,
+      ),
+      _NutrientStat(
+        'Calcium',
+        _mealNum(sum((m) => m.calcium)),
+        'mg',
+        Icons.water_drop_rounded,
+      ),
+      _NutrientStat(
+        'Iron',
+        _mealNum(sum((m) => m.iron)),
+        'mg',
+        Icons.bloodtype_rounded,
+      ),
     ];
 
     return ListView(
@@ -436,9 +474,8 @@ class _MealPlanPageState extends State<MealPlanPage> {
 
   Widget _buildShoppingList() {
     // Unique ingredients, in the order they first appear in the plan.
-    final items = <String>{
-      for (final meal in mealPlanItems) ...meal.shopping,
-    }.toList();
+    final items = <String>{for (final meal in mealPlanItems) ...meal.shopping}
+        .toList();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
@@ -571,10 +608,7 @@ class MealCard extends StatelessWidget {
     final emojiTile = Container(
       color: meal.tileColor,
       alignment: Alignment.center,
-      child: Text(
-        meal.emoji,
-        style: const TextStyle(fontSize: 44),
-      ),
+      child: Text(meal.emoji, style: const TextStyle(fontSize: 44)),
     );
 
     final asset = meal.imageAsset;
@@ -600,13 +634,18 @@ class MealCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('•  ',
-              style: TextStyle(color: mealText, fontSize: 13, height: 1.3)),
+          const Text(
+            '•  ',
+            style: TextStyle(color: mealText, fontSize: 13, height: 1.3),
+          ),
           Expanded(
             child: Text(
               text,
               style: const TextStyle(
-                  color: mealText, fontSize: 13, height: 1.3),
+                color: mealText,
+                fontSize: 13,
+                height: 1.3,
+              ),
             ),
           ),
         ],
@@ -660,67 +699,22 @@ class _NutrientTile extends StatelessWidget {
                 TextSpan(
                   text: stat.value,
                   style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.bold),
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 TextSpan(
                   text: ' ${stat.unit}',
                   style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w500),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
             style: const TextStyle(color: mealText),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class PlaceholderPage extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-
-  const PlaceholderPage({
-    super.key,
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 38,
-                backgroundColor: blush,
-                child: Icon(icon, size: 38, color: rose),
-              ),
-              const SizedBox(height: 18),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: ink,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                subtitle,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.black54, fontSize: 15),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
