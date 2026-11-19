@@ -7,6 +7,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'database.dart';
 
+const Color growthGreen = Color(0xFF32966A);
+const Color growthGreenLight = Color(0xFFE5F5EB);
+const Color growthGreenDark = Color(0xFF216747);
+
 class GrowthPage extends StatefulWidget {
   final String ownerId;
   final String? initialChildId;
@@ -328,7 +332,7 @@ class _GrowthPageState extends State<GrowthPage> {
         : children.where((c) => c['id'] == selectedId).firstOrNull;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1E88E5),
+      backgroundColor: growthGreen,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -591,7 +595,7 @@ class _GrowthHeader extends StatelessWidget {
             backgroundColor: Colors.white,
             child: Icon(
               Icons.trending_up_rounded,
-              color: Color(0xFFF2C230),
+              color: growthGreenDark,
             ),
           ),
           const SizedBox(width: 12),
@@ -615,13 +619,6 @@ class _GrowthHeader extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.notifications_none,
-              color: Colors.white,
             ),
           ),
         ],

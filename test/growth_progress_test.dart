@@ -101,7 +101,7 @@ void main() {
     final who = (await tester.runAsync(() => rootBundle.loadString('assets/who/growth_curves.csv')))!;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: GrowthPage(
         ownerId: 'a', initialChildId: 1, repository: repository, heightReference: Future.value(who),
-        scheduleReminder: (_, __) async => true))));
+        scheduleReminder: (_, _) async => true))));
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('Add measurement'), 400,
         scrollable: find.byType(Scrollable).first);
@@ -123,7 +123,7 @@ void main() {
     final who = (await tester.runAsync(() => rootBundle.loadString('assets/who/growth_curves.csv')))!;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: GrowthPage(
         ownerId: 'a', initialChildId: 1, repository: RecordsRepository(), heightReference: Future.value(who),
-        scheduleReminder: (_, __) async => true))));
+        scheduleReminder: (_, _) async => true))));
     await tester.pumpAndSettle();
     expect(find.textContaining('WHO 2006'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('2025-03-10'), 300,

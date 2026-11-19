@@ -622,7 +622,7 @@ class MealCard extends StatelessWidget {
             : Image.asset(
                 asset,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => emojiTile,
+                errorBuilder: (_, _, _) => emojiTile,
               ),
       ),
     );

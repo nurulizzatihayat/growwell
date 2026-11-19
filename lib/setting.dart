@@ -212,7 +212,7 @@ class _SettingState extends State<Setting> {
                 style: FilledButton.styleFrom(
                   backgroundColor: charcoal,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: charcoal.withOpacity(0.6),
+                  disabledBackgroundColor: charcoal.withValues(alpha: 0.6),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

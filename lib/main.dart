@@ -23,15 +23,15 @@ const Color homeBlue = Color(0xFF2878D0);
 const Color homeBlueLight = Color(0xFFEAF3FF);
 const Color homeBlueDark = Color(0xFF17549B);
 
-// Growth — Yellow
-const Color growthYellow = Color(0xFF32966A);
-const Color growthYellowLight = Color(0xFFE5F5EB);
-const Color growthYellowDark = Color(0xFF216747);
+// Growth — Green
+const Color growthGreen = Color(0xFF32966A);
+const Color growthGreenLight = Color(0xFFE5F5EB);
+const Color growthGreenDark = Color(0xFF216747);
 
-// Nutrition — Green
-const Color nutritionGreen = Color(0xFFF2C230);
-const Color nutritionGreenLight = Color(0xFFFFF7D6);
-const Color nutritionGreenDark = Color(0xFF946900);
+// Nutrition — Yellow
+const Color nutritionYellow = Color(0xFFF2C230);
+const Color nutritionYellowLight = Color(0xFFFFF7D6);
+const Color nutritionYellowDark = Color(0xFF946900);
 
 // Recipes — Red
 const Color recipesRed = Color(0xFFE34D4D);
@@ -119,8 +119,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   // Section colors
   static const Color homeBlue = Color(0xFF2878D0);
-  static const Color growthYellow = Color(0xFF32966A);
-  static const Color nutritionGreen = Color(0xFFF2C230);
+  static const Color growthGreen = Color(0xFF32966A);
+  static const Color nutritionYellow = Color(0xFFF2C230);
   static const Color recipesRed = Color(0xFFE34D4D);
   static const Color moreCharcoal = Color(0xFF45464F);
 
@@ -136,9 +136,9 @@ class _MainNavigationState extends State<MainNavigation> {
       case 0:
         return homeBlue;
       case 1:
-        return growthYellow;
+        return growthGreen;
       case 2:
-        return nutritionGreen;
+        return nutritionYellow;
       case 3:
         return recipesRed;
       case 4:
